@@ -1,0 +1,6 @@
+<Atlas>
+  <Texture filename="asparagus_seeds_slot.tex" />
+  <Elements>
+    <Element name="asparagus_seeds_slot.tex" u1="0.0" u2="1.0" v1="0.0" v2="1.0" />
+  </Elements>
+</Atlas>

@@ -1,0 +1,15 @@
+{
+  "Lua.diagnostics.disable": [
+    "spell-check",
+    "no-unknown",
+    "name-style-check",
+    "codestyle-check",
+    "global-element"
+  ],
+  "Lua.diagnostics.globals": [
+    "Asset",
+    "AddMinimapAtlas",
+    "TheWorld",
+    "GLOBAL"
+  ]
+}
