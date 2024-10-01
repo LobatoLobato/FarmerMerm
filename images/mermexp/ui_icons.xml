@@ -1,0 +1,161 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Atlas>
+	<Texture filename="ui_icons.tex" />
+	<Elements>
+		<Element name="asparagus_seeds.tex" u1="0.0843333333333333" u2="0.165666666666667" v2="0.124"
+			v1="0.001" variant="" />
+		<Element name="asparagus_seeds_gray.tex" u1="0.251" u2="0.332333333333333" v2="0.374" v1="0.251"
+			variant="" />
+		<Element name="carrot_seeds.tex" u1="0.167666666666667" u2="0.249" v2="0.124" v1="0.001"
+			variant="" />
+		<Element name="carrot_seeds_gray.tex" u1="0.334333333333333" u2="0.415666666666667" v2="0.374"
+			v1="0.251" variant="" />
+		<Element name="corn_seeds.tex" u1="0.251" u2="0.332333333333333" v2="0.249" v1="0.126"
+			variant="" />
+		<Element name="corn_seeds_gray.tex" u1="0.417666666666667" u2="0.499" v2="0.499" v1="0.376"
+			variant="" />
+		<Element name="dragonfruit_seeds.tex" u1="0.334333333333333" u2="0.415666666666667" v2="0.249"
+			v1="0.126" variant="" />
+		<Element name="dragonfruit_seeds_gray.tex" u1="0.251" u2="0.332333333333333" v2="0.124"
+			v1="0.001" variant="" />
+		<Element name="durian_seeds.tex" u1="0.501" u2="0.582333333333333" v2="0.499" v1="0.376"
+			variant="" />
+		<Element name="durian_seeds_gray.tex" u1="0.417666666666667" u2="0.499" v2="0.374" v1="0.251"
+			variant="" />
+		<Element name="eggplant_seeds.tex" u1="0.501" u2="0.582333333333333" v2="0.374" v1="0.251"
+			variant="" />
+		<Element name="eggplant_seeds_gray.tex" u1="0.417666666666667" u2="0.499" v2="0.249" v1="0.126"
+			variant="" />
+		<Element name="firenettles.tex" u1="0.334333333333333" u2="0.415666666666667" v2="0.124"
+			v1="0.001" variant="" />
+		<Element name="firenettles_gray.tex" u1="0.584333333333333" u2="0.665666666666667" v2="0.499"
+			v1="0.376" variant="" />
+		<Element name="forgetmelots.tex" u1="0.417666666666667" u2="0.499" v2="0.124" v1="0.001"
+			variant="" />
+		<Element name="forgetmelots_gray.tex" u1="0.584333333333333" u2="0.665666666666667" v2="0.374"
+			v1="0.251" variant="" />
+		<Element name="garlic_seeds.tex" u1="0.501" u2="0.582333333333333" v2="0.249" v1="0.126"
+			variant="" />
+		<Element name="garlic_seeds_gray.tex" u1="0.584333333333333" u2="0.665666666666667" v2="0.249"
+			v1="0.126" variant="" />
+		<Element name="onion_seeds.tex" u1="0.501" u2="0.582333333333333" v2="0.124" v1="0.001"
+			variant="" />
+		<Element name="onion_seeds_gray.tex" u1="0.584333333333333" u2="0.665666666666667" v2="0.124"
+			v1="0.001" variant="" />
+		<Element name="pepper_seeds.tex" u1="0.667666666666667" u2="0.749" v2="0.999" v1="0.876"
+			variant="" />
+		<Element name="pepper_seeds_gray.tex" u1="0.751" u2="0.832333333333333" v2="0.999" v1="0.876"
+			variant="" />
+		<Element name="pomegranate_seeds.tex" u1="0.667666666666667" u2="0.749" v2="0.874" v1="0.751"
+			variant="" />
+		<Element name="pomegranate_seeds_gray.tex" u1="0.751" u2="0.832333333333333" v2="0.874"
+			v1="0.751" variant="" />
+		<Element name="potato_seeds.tex" u1="0.667666666666667" u2="0.749" v2="0.749" v1="0.626"
+			variant="" />
+		<Element name="potato_seeds_gray.tex" u1="0.834333333333333" u2="0.915666666666667" v2="0.999"
+			v1="0.876" variant="" />
+		<Element name="pumpkin_seeds.tex" u1="0.751" u2="0.832333333333333" v2="0.749" v1="0.626"
+			variant="" />
+		<Element name="pumpkin_seeds_gray.tex" u1="0.667666666666667" u2="0.749" v2="0.624" v1="0.501"
+			variant="" />
+		<Element name="tillweed.tex" u1="0.917666666666667" u2="0.999" v2="0.999" v1="0.876" variant="" />
+		<Element name="tillweed_gray.tex" u1="0.834333333333333" u2="0.915666666666667" v2="0.874"
+			v1="0.751" variant="" />
+		<Element name="tomato_seeds.tex" u1="0.917666666666667" u2="0.999" v2="0.874" v1="0.751"
+			variant="" />
+		<Element name="tomato_seeds_gray.tex" u1="0.834333333333333" u2="0.915666666666667" v2="0.749"
+			v1="0.626" variant="" />
+		<Element name="watermelon_seeds.tex" u1="0.751" u2="0.832333333333333" v2="0.624" v1="0.501"
+			variant="" />
+		<Element name="watermelon_seeds_gray.tex" u1="0.667666666666667" u2="0.749" v2="0.499"
+			v1="0.376" variant="" />
+		<Element name="asparagus_seeds_slot.tex" u1="0.001" u2="0.0823333333333333" v2="0.999"
+			v1="0.876" variant="" />
+		<Element name="asparagus_seeds_slot_gray.tex" u1="0.0843333333333333" u2="0.165666666666667"
+			v2="0.999" v1="0.876" variant="" />
+		<Element name="blueprint_slot.tex" u1="0.001" u2="0.0823333333333333" v2="0.874" v1="0.751"
+			variant="" />
+		<Element name="carrot_seeds_slot.tex" u1="0.0843333333333333" u2="0.165666666666667" v2="0.874"
+			v1="0.751" variant="" />
+		<Element name="carrot_seeds_slot_gray.tex" u1="0.167666666666667" u2="0.249" v2="0.999"
+			v1="0.876" variant="" />
+		<Element name="compost_formula_manure_slot.tex" u1="0.167666666666667" u2="0.249" v2="0.874"
+			v1="0.751" variant="" />
+		<Element name="compost_slot.tex" u1="0.251" u2="0.332333333333333" v2="0.999" v1="0.876"
+			variant="" />
+		<Element name="corn_seeds_slot.tex" u1="0.251" u2="0.332333333333333" v2="0.874" v1="0.751"
+			variant="" />
+		<Element name="corn_seeds_slot_gray.tex" u1="0.001" u2="0.0823333333333333" v2="0.749"
+			v1="0.626" variant="" />
+		<Element name="dragonfruit_seeds_slot.tex" u1="0.001" u2="0.0823333333333333" v2="0.624"
+			v1="0.501" variant="" />
+		<Element name="dragonfruit_seeds_slot_gray.tex" u1="0.0843333333333333" u2="0.165666666666667"
+			v2="0.749" v1="0.626" variant="" />
+		<Element name="durian_seeds_slot.tex" u1="0.167666666666667" u2="0.249" v2="0.749" v1="0.626"
+			variant="" />
+		<Element name="durian_seeds_slot_gray.tex" u1="0.0843333333333333" u2="0.165666666666667"
+			v2="0.624" v1="0.501" variant="" />
+		<Element name="eggplant_seeds_slot.tex" u1="0.167666666666667" u2="0.249" v2="0.624" v1="0.501"
+			variant="" />
+		<Element name="eggplant_seeds_slot_gray.tex" u1="0.251" u2="0.332333333333333" v2="0.749"
+			v1="0.626" variant="" />
+		<Element name="empty_slot.tex" u1="0.251" u2="0.332333333333333" v2="0.624" v1="0.501"
+			variant="" />
+		<Element name="firenettles_slot.tex" u1="0.334333333333333" u2="0.415666666666667" v2="0.999"
+			v1="0.876" variant="" />
+		<Element name="firenettles_slot_gray.tex" u1="0.417666666666667" u2="0.499" v2="0.999"
+			v1="0.876" variant="" />
+		<Element name="forgetmelots_slot.tex" u1="0.334333333333333" u2="0.415666666666667" v2="0.874"
+			v1="0.751" variant="" />
+		<Element name="forgetmelots_slot_gray.tex" u1="0.501" u2="0.582333333333333" v2="0.999"
+			v1="0.876" variant="" />
+		<Element name="formula_slot.tex" u1="0.417666666666667" u2="0.499" v2="0.874" v1="0.751"
+			variant="" />
+		<Element name="fruitflyfruit_slot.tex" u1="0.334333333333333" u2="0.415666666666667" v2="0.749"
+			v1="0.626" variant="" />
+		<Element name="garlic_seeds_slot.tex" u1="0.417666666666667" u2="0.499" v2="0.749" v1="0.626"
+			variant="" />
+		<Element name="garlic_seeds_slot_gray.tex" u1="0.334333333333333" u2="0.415666666666667"
+			v2="0.624" v1="0.501" variant="" />
+		<Element name="manure_slot.tex" u1="0.501" u2="0.582333333333333" v2="0.874" v1="0.751"
+			variant="" />
+		<Element name="onion_seeds_slot.tex" u1="0.584333333333333" u2="0.665666666666667" v2="0.999"
+			v1="0.876" variant="" />
+		<Element name="onion_seeds_slot_gray.tex" u1="0.584333333333333" u2="0.665666666666667"
+			v2="0.874" v1="0.751" variant="" />
+		<Element name="pepper_seeds_slot.tex" u1="0.501" u2="0.582333333333333" v2="0.749" v1="0.626"
+			variant="" />
+		<Element name="pepper_seeds_slot_gray.tex" u1="0.417666666666667" u2="0.499" v2="0.624"
+			v1="0.501" variant="" />
+		<Element name="pomegranate_seeds_slot.tex" u1="0.501" u2="0.582333333333333" v2="0.624"
+			v1="0.501" variant="" />
+		<Element name="pomegranate_seeds_slot_gray.tex" u1="0.584333333333333" u2="0.665666666666667"
+			v2="0.749" v1="0.626" variant="" />
+		<Element name="potato_seeds_slot.tex" u1="0.584333333333333" u2="0.665666666666667" v2="0.624"
+			v1="0.501" variant="" />
+		<Element name="potato_seeds_slot_gray.tex" u1="0.001" u2="0.0823333333333333" v2="0.499"
+			v1="0.376" variant="" />
+		<Element name="pumpkin_seeds_slot.tex" u1="0.0843333333333333" u2="0.165666666666667" v2="0.499"
+			v1="0.376" variant="" />
+		<Element name="pumpkin_seeds_slot_gray.tex" u1="0.001" u2="0.0823333333333333" v2="0.374"
+			v1="0.251" variant="" />
+		<Element name="seeds_slot.tex" u1="0.0843333333333333" u2="0.165666666666667" v2="0.374"
+			v1="0.251" variant="" />
+		<Element name="seeds_slot_gray.tex" u1="0.001" u2="0.0823333333333333" v2="0.249" v1="0.126"
+			variant="" />
+		<Element name="tillweed_slot.tex" u1="0.167666666666667" u2="0.249" v2="0.499" v1="0.376"
+			variant="" />
+		<Element name="tillweed_slot_gray.tex" u1="0.0843333333333333" u2="0.165666666666667" v2="0.249"
+			v1="0.126" variant="" />
+		<Element name="tomato_seeds_slot.tex" u1="0.001" u2="0.0823333333333333" v2="0.124" v1="0.001"
+			variant="" />
+		<Element name="tomato_seeds_slot_gray.tex" u1="0.167666666666667" u2="0.249" v2="0.374"
+			v1="0.251" variant="" />
+		<Element name="wateringcan_slot.tex" u1="0.251" u2="0.332333333333333" v2="0.499" v1="0.376"
+			variant="" />
+		<Element name="watermelon_seeds_slot.tex" u1="0.334333333333333" u2="0.415666666666667"
+			v2="0.499" v1="0.376" variant="" />
+		<Element name="watermelon_seeds_slot_gray.tex" u1="0.167666666666667" u2="0.249" v2="0.249"
+			v1="0.126" variant="" />
+	</Elements>
+</Atlas>

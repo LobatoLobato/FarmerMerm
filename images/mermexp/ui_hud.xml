@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Atlas>
+	<Texture filename="ui_hud.tex" />
+	<Elements>
+		<Element name="blueprintbg.tex" u1="0.001" u2="0.6659921875" v2="0.999" v1="0.561546875"
+			variant="" />
+		<Element name="blueprintframe.tex" u1="0.001" u2="0.6659921875" v2="0.559546875" v1="0.12209375"
+			variant="" />
+		<Element name="blueprinttile.tex" u1="0.6679921875" u2="0.7909921875" v2="0.999" v1="0.876"
+			variant="" />
+	</Elements>
+</Atlas>
