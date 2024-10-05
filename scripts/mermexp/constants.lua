@@ -16,6 +16,18 @@ local VEGGIES = PlantLookupTable(PLANT_DEFS, "crop_seed", "product", { "randomse
 local WEEDS = PlantLookupTable(WEED_DEFS, "crop_small", "product")
 local PLANTABLES = PlantLookupTable.Join(SEEDS, WEEDS, { "weed_ivy" })
 
+local TILE3x3 = {
+  { 1.333,  1.333 },
+  { 0,      1.333 },
+  { -1.333, 1.333 },
+  { 1.333,  0 },
+  { 0,      0 },
+  { -1.333, 0 },
+  { 1.333,  -1.333 },
+  { 0,      -1.333 },
+  { -1.333, -1.333 },
+}
+
 return {
   SEEDS                 = SEEDS,
   VEGGIES               = VEGGIES,
@@ -26,5 +38,6 @@ return {
   UI_ICONS_ATLAS        = UI_ICONS_ATLAS,
   UI_CONTAINERS_ATLAS   = UI_CONTAINERS_ATLAS,
   INVENTORYIMAGES_ATLAS = INVENTORYIMAGES_ATLAS,
-  FARM_PLANT_TAGS       = { "farm_plant" }
+  FARM_PLANT_TAGS       = { "farm_plant" },
+  TILE3x3               = TILE3x3
 }

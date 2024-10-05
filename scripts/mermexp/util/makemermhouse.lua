@@ -191,14 +191,6 @@ local function OnHaunt(inst)
   end
 end
 
-
--- local function mermhouse_crafted_common_base(inst)
---     -- inst.MiniMapEntity:SetIcon("xxxxxxxxxxxxx.png")
---     -- inst.AnimState:SetBank("xxxxxxxxxxxxx")
---     -- inst.AnimState:SetBuild("xxxxxxxxxxxxx")
---     -- inst.AnimState:PlayAnimation("idle", true)
--- end
-
 local function onbuilt(inst)
   inst.SoundEmitter:PlaySound("dontstarve/characters/wurt/merm/hut/place")
   inst.AnimState:PlayAnimation("place")
@@ -394,6 +386,13 @@ local function invalid_placement_fn(player, placer)
     player.components.talker:Say(GetString(player, "ANNOUNCE_CANTBUILDHERE_HOUSE"))
   end
 end
+
+-- local function mermhouse_crafted_common_base(inst)
+--     -- inst.MiniMapEntity:SetIcon("xxxxxxxxxxxxx.png")
+--     -- inst.AnimState:SetBank("xxxxxxxxxxxxx")
+--     -- inst.AnimState:SetBuild("xxxxxxxxxxxxx")
+--     -- inst.AnimState:PlayAnimation("idle", true)
+-- end
 
 ---comment
 ---@param name string

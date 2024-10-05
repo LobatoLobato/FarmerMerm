@@ -380,4 +380,31 @@ function json.decode(str)
   return res
 end
 
+function json.prettify(s, indent_size)
+  local indent = 0;
+  local result = "";
+
+  indent_size = indent_size or 2
+
+  for char in s:gmatch "." do
+    if char == '{' then
+      indent = indent + indent_size
+      result = result .. char .. "\n" .. (" "):rep(indent)
+    elseif char == '[' then
+      result = result .. "\n" .. (" "):rep(indent)
+      indent = indent + indent_size
+      result = result .. char .. "\n" .. (" "):rep(indent)
+    elseif char == '}' or char == ']' then
+      indent = indent - indent_size;
+      result = result .. "\n" .. (" "):rep(indent) .. char;
+    elseif char == ',' then
+      result = result .. char .. "\n" .. (" "):rep(indent)
+    else
+      result = result .. char;
+    end
+  end
+
+  return result
+end
+
 return json

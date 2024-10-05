@@ -96,10 +96,10 @@ end
 
 function FarmerHouseContainer:GetFertilizers()
   return {
-    self:GetItemInSlot(self.reserved_slots.multinutrient),
-    self:GetItemInSlot(self.reserved_slots.compost),
-    self:GetItemInSlot(self.reserved_slots.formula),
-    self:GetItemInSlot(self.reserved_slots.manure),
+    self:GetItemInSlot(self.reserved_slots.fertilizers.multinutrient),
+    self:GetItemInSlot(self.reserved_slots.fertilizers.compost),
+    self:GetItemInSlot(self.reserved_slots.fertilizers.formula),
+    self:GetItemInSlot(self.reserved_slots.fertilizers.manure),
   }
 end
 

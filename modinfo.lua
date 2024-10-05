@@ -14,8 +14,7 @@ priority = 0
 api_version = 10
 
 local bannertweak = { { description = "", data = false, } } --needed for banners to work
-configuration_options =
-{
+configuration_options = {
   {
     name = "banner1",
     label = "Merm Farmer",
@@ -24,14 +23,14 @@ configuration_options =
     default = false,
   },
   {
-    name = "mermfarmer_unloading_disabled",
-    label = "Disable Unloading",
+    name = "mermexp_mermfarmer_unloads",
+    label = "Enable Unloading",
     hover = "Makes Farmers able to work even when you're away or in caves!",
     options =
     {
       { description = "No",  data = false },
       { description = "Yes", data = true },
     },
-    default = true,
+    default = false,
   },
 }

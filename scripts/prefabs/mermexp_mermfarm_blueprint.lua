@@ -11,7 +11,7 @@ local assets = {
 local ASSIST_SCALE = 2
 local ASSIST_RANGE = 8
 
-local function CreateRegisterAssist(tx, ty, tz, is_registered, plant)
+local function CreateRegisterAssist(tx, ty, tz, is_registered, plant, is_tilled)
   local inst = CreateEntity()
 
   --[[Non-networked entity]]
@@ -49,7 +49,7 @@ local function CreateRegisterAssist(tx, ty, tz, is_registered, plant)
   end
 
   inst.AnimState:Hide("outer")
-  if plant then
+  if plant or is_tilled then
     inst.Transform:SetPosition(tx, 0.1, tz)
   else
     inst.Transform:SetPosition(tx, ty, tz)
@@ -64,7 +64,8 @@ local function DrawHelper(helpers, farmblueprint, tx, ty, tz)
 
   for _, slot in pairs(farmblueprint:GetRegisteredFarmTileAtPoint(tx, ty, tz).slots) do
     if not farmblueprint.SlotIsPlanted(slot) then
-      table.insert(helpers, CreateRegisterAssist(slot.x, slot.y, slot.z, true, slot.assigned_plant))
+      local is_tilled = farmblueprint.SlotIsTilled(slot)
+      table.insert(helpers, CreateRegisterAssist(slot.x, slot.y, slot.z, true, slot.assigned_plant, is_tilled))
     end
   end
 end
@@ -114,7 +115,8 @@ local function CreateRegisterAssistUpdater(range, owner)
 
   inst:AddComponent("updatelooper")
   inst.components.updatelooper:AddOnUpdateFn(OnUpdateAssistHelper)
-  inst.owner.replica["mermexp_mermfarmblueprint"]:SetOnChangeFn(function() OnUpdateAssistHelper(inst, 0, true) end)
+  inst:ListenForEvent("change", function() OnUpdateAssistHelper(inst, 0, true) end, owner)
+  OnUpdateAssistHelper(inst)
 
   return inst
 end
@@ -122,12 +124,9 @@ end
 local function OnEnableHelper(inst, enabled)
   if enabled then
     if inst:PlayerHasOtherBlueprintEquipped() or not inst:IsActiveOrEquipped() then return end
-
     inst.assist_updater = CreateRegisterAssistUpdater(ASSIST_RANGE, inst)
-    OnUpdateAssistHelper(inst.assist_updater)
   elseif inst.assist_updater ~= nil then
     for _, helper in ipairs(inst.assist_updater.helpers) do helper:Remove() end
-    inst.replica["mermexp_mermfarmblueprint"]:SetOnChangeFn(nil)
     inst.assist_updater:Remove()
     inst.assist_updater = nil
   end
@@ -142,9 +141,35 @@ local function OnUse(inst)
     if not CanEntitySeeTarget(owner, inst) then return false end
     owner:ShowPopUp(POPUPS.MERMEXP_MERMFARMBLUEPRINT, true, inst)
   end
+
   return false
 end
 
+local function AttachClassified(inst, classified)
+  inst.mermexp_mermfarmblueprint_classified = classified
+  inst.ondetach_mermexp_mermfarmblueprint_classified = function()
+    inst:DetachMermexpMermfarmBlueprintClassified()
+  end
+  inst:ListenForEvent("onremove", inst.ondetach_mermexp_mermfarmblueprint_classified, classified)
+end
+
+local function DetachClassified(inst)
+  inst.mermexp_mermfarmblueprint_classified = nil
+  inst.ondetach_mermexp_mermfarmblueprint_classified = nil
+end
+
+local function OnRemoveEntity(inst)
+  if inst.mermexp_mermfarmblueprint_classified ~= nil then
+    if TheWorld.ismastersim then
+      inst.mermexp_mermfarmblueprint_classified:Remove()
+      inst.mermexp_mermfarmblueprint_classified = nil
+    else
+      inst:RemoveEventCallback("onremove", inst.ondetach_mermexp_mermfarmblueprint_classified,
+        inst.mermexp_mermfarmblueprint_classified)
+      inst:DetachMermexpMermfarmBlueprintClassified()
+    end
+  end
+end
 
 local function fn()
   local inst = CreateEntity()
@@ -164,7 +189,9 @@ local function fn()
   inst:AddTag("mermexp")
   inst:AddTag("mermfarm_blueprint")
 
-  inst.mermexp_mermfarmblueprint_classified = SpawnPrefab("mermexp_mermfarmblueprint_classified")
+  if not TUNING.MERMEXP_MERMFARMER_UNLOADS then
+    inst.entity:SetCanSleep(false)
+  end
 
   if not TheNet:IsDedicated() then
     inst.entity:SetCanSleep(false)
@@ -207,13 +234,20 @@ local function fn()
     end)
   end
 
-  inst.entity:SetPristine()
+  inst.OnRemoveEntity = OnRemoveEntity
+  inst.AttachMermexpMermfarmBlueprintClassified = AttachClassified
+  inst.DetachMermexpMermfarmBlueprintClassified = DetachClassified
 
   inst.persists = true
+
+  inst.entity:SetPristine()
 
   if not TheWorld.ismastersim then
     return inst
   end
+
+  inst.mermexp_mermfarmblueprint_classified = SpawnPrefab("mermexp_mermfarmblueprint_classified")
+  inst:AddChild(inst.mermexp_mermfarmblueprint_classified)
 
   inst:AddComponent("inspectable")
 

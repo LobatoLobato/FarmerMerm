@@ -762,12 +762,16 @@ local function common_master(inst)
     options = options ~= nil and options or {}
 
     if inst.components.inventory ~= nil then
+      if options.equipslot then
+        local item = inst.components.inventory:GetEquippedItem(options.equipslot)
+        if item ~= nil and StringMatches(item.prefab, item_name, options.exact) then
+          return options.remove and inst.components.inventory:UnequipItem(options.equipslot) or item
+        end
+      end
       for _, equipslot in pairs(EQUIPSLOTS) do
-        if (options.equipslot ~= nil and options.equipslot == equipslot) or options.equipslot == nil then
-          local item = inst.components.inventory:GetEquippedItem(equipslot)
-          if item ~= nil and StringMatches(item.prefab, item_name, options.exact) then
-            return options.remove and inst.components.inventory:UnequipItem(equipslot) or item
-          end
+        local item = inst.components.inventory:GetEquippedItem(equipslot)
+        if item ~= nil and StringMatches(item.prefab, item_name, options.exact) then
+          return options.remove and inst.components.inventory:UnequipItem(equipslot) or item
         end
       end
     end
@@ -810,20 +814,26 @@ local function common_master(inst)
     if equipitem ~= nil then
       local item = inst.components.inventory:Unequip(equipslot)
       local home = inst:GetHome()
+      local store_at_home = false
 
       if options.store_at_home_list ~= nil and home ~= nil then
         for _, name in ipairs(options.store_at_home_list) do
           if item.prefab:find(name) then
-            options.store_at_home = true
+            store_at_home = true
             break
           end
         end
       end
 
-      if options.store_at_home and home ~= nil then
+      if store_at_home and home ~= nil then
         home.components.container:GiveItem(item)
       else
-        inst.components.inventory:GiveItem(item)
+        for k = 1, inst.components.inventory.maxslots do
+          if inst.components.inventory.itemslots[k] == nil then
+            inst.components.inventory.itemslots[k] = item
+            return
+          end
+        end
       end
     end
   end

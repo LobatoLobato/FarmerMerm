@@ -1,6 +1,15 @@
+---@class Plant
+---@field name string
+---@field prefab string
+---@field build string
+---@field bank string
+---@field anim string
+---@field index number
+
 ---@class PlantLookupTable
 ---@field Has fun(self: PlantLookupTable, key: string|integer): boolean
----@field At fun(self: PlantLookupTable, key: string|integer): {name: string, build: string, bank: string, anim: string}, integer
+---@field At fun(self: PlantLookupTable, key: string|integer): Plant?, integer?
+---@field Index fun(self: PlantLookupTable, key: string): integer?
 
 ---@class _
 ---@operator call:PlantLookupTable
@@ -61,6 +70,18 @@ end
 
 function PlantLookupTable:Has(key)
   return self:At(key) ~= nil
+end
+
+function PlantLookupTable:Index(key)
+  local index = self[key]
+
+  if index == nil then
+    for i, plant in ipairs(self) do
+      if plant.prefab == key then index = i end
+    end
+  end
+
+  return index
 end
 
 function PlantLookupTable:At(key)

@@ -26,6 +26,11 @@ local function mermhouse_farmer_common(inst)
     inst.AnimState:PlayAnimation("idle", true)
 
     inst:AddTag("mermhouse_farmer")
+
+    if not TUNING.MERMEXP_MERMFARMER_UNLOADS then
+        inst.entity:SetCanSleep(false)
+    end
+
     if not TheWorld.ismastersim then
         inst.OnEntityReplicated = function(inst) inst.replica.container:WidgetSetup(ContainerWidget) end
     end
@@ -41,7 +46,7 @@ local function mermhouse_farmer_master(inst)
     inst.GetFarmBlueprint = function() return container:GetFarmBlueprint() end
     inst.GetFertilizers = function() return container:GetFertilizers() end
     inst.GetWateringCan = function() return container:GetWateringCan() end
-    inst.GetWaterStorageLevel = function() return container.waterlevel end
+    inst.GetWaterStorageLevel = function() return waterreservoir:Level() end
 
     local childspawner = inst.components.childspawner
     childspawner.childname = "mermexp_merm_farmer"

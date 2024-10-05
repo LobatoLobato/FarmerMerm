@@ -38,17 +38,18 @@ function FarmBlueprintTile:DrawSlots()
   end
 end
 
-function FarmBlueprintTile:OnMouseButton(button, down)
-  if not TheInput:IsKeyDown(KEY_CTRL) or not down then return end
-  local isleftclick = button % 2 == 0
-
-  if isleftclick and not self.blueprint:IsRegisteredFarmTile(self.id) then
-    self.blueprint:RegisterFarmTile(nil, self.world_pos)
-    self:DrawSlots()
-  else
-    self:KillAllChildren()
-    self.blueprint:UnregisterFarmTile(self.id)
+function FarmBlueprintTile:OnMouseButton(button, down, x, y)
+  if TheInput:IsKeyDown(KEY_CTRL) and down then
+    if button == MOUSEBUTTON_LEFT and not self.blueprint:IsRegisteredFarmTile(self.id) then
+      self.blueprint:RegisterFarmTile(self.world_pos:Get())
+      self:DrawSlots()
+    else
+      self:KillAllChildren()
+      self.blueprint:UnregisterFarmTile(self.id)
+    end
   end
+
+  return self._base.OnMouseButton(self, button, down, x, y)
 end
 
 function FarmBlueprintTile:OnRotate(angle)

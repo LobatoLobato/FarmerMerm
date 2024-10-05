@@ -5,33 +5,24 @@ require "behaviours/runaway"
 require "behaviours/doaction"
 require "behaviours/panic"
 
-local BrainCommon            = require "brains/braincommon"
+local BrainCommon          = require "brains/braincommon"
 
-local FACETIME_BASE          = 2
-local FACETIME_RAND          = 2
+local FACETIME_BASE        = 2
+local FACETIME_RAND        = 2
 
-local SEE_PLAYER_DIST        = 2
-local MIN_SHRINE_WANDER_DIST = 4
-local MAX_SHRINE_WANDER_DIST = 15
-local MAX_WANDER_DIST        = 20
-local SHRINE_LOITER_TIME     = 4
-local SHRINE_LOITER_TIME_VAR = 3
-local LEASH_RETURN_DIST      = 10
-local LEASH_MAX_DIST         = 20
+local SEE_PLAYER_DIST      = 2
+local MAX_WANDER_DIST      = 10
 
-local FIND_SHED_RANGE        = 15
+local FIND_SHED_RANGE      = 15
 
-local TOOLSHED_ONEOF_TAGS    = { "merm_toolshed", "merm_toolshed_upgraded" }
-local MERM_TOOL_CANT_TAGS    = { "INLIMBO" }
-local MERM_TOOL_ONEOF_TAGS   = { "merm_tool", "merm_tool_upgraded" }
-local SOILMUST               = { "soil" }
-local SOILMUSTNOT            = { "merm_soil_blocker", "farm_debris", "NOBLOCK" }
-local FARM_PLANT_TAGS        = { "farm_plant", "weed" }
-local FARM_ENTITIES_TAGS     = { "soil", "farm_debris", "farm_plant", "weed" }
+local TOOLSHED_ONEOF_TAGS  = { "merm_toolshed", "merm_toolshed_upgraded" }
+local MERM_TOOL_CANT_TAGS  = { "INLIMBO" }
+local MERM_TOOL_ONEOF_TAGS = { "merm_tool", "merm_tool_upgraded" }
+local SOILMUST             = { "soil" }
+local SOILMUSTNOT          = { "merm_soil_blocker", "farm_debris", "NOBLOCK" }
+local FARM_PLANT_TAGS      = { "farm_plant", "weed" }
+local FARM_ENTITIES_TAGS   = { "soil", "farm_debris", "farm_plant", "weed" }
 
-local MermBrain              = Class(Brain, function(self, inst)
-    Brain._ctor(self, inst)
-end)
 
 local function GetSoilMoisture(x, y, z)
     local function GetUpValue(func, varname)
@@ -115,6 +106,9 @@ local function NeedsTool(inst)
     return inst:GetTool() == nil
 end
 
+local function NeedsBlueprint(inst)
+    return inst:GetFarmBlueprint() == nil
+end
 
 local function GetClosestToolShed(inst, dist)
     dist = dist or FIND_SHED_RANGE
@@ -161,6 +155,14 @@ local function GetClosestToolShedPosition(inst, dist)
     end
 end
 
+local function GetNoLeaderHomePos(inst)
+    if inst.components.follower and inst.components.follower.leader ~= nil then
+        return nil
+    else
+        return inst.components.knownlocations:GetLocation("home")
+    end
+end
+
 local function IterateAndDoActionNode(self, parameters)
     local name = parameters.name
     local starter = parameters.starter
@@ -184,7 +186,11 @@ local function IterateAndDoActionNode(self, parameters)
         looper = LoopNode { ConditionNode(whilenode), DoAction(self.inst, findnode, "DoAction_NoChatty", run, 10) }
     end
 
-    return IfThenDoWhileNode(ifnode, whilenode, name, looper)
+    local IteratorNode = IfThenDoWhileNode(ifnode, whilenode, name, looper)
+
+    function IteratorNode:ClearIterator() iterator = {} end
+
+    return IteratorNode
 end
 
 local function SortTiles(tiles)
@@ -200,11 +206,7 @@ local function SortTiles(tiles)
 end
 
 local function SortSlots(slots)
-    local sorted_slots = slots
-
-    table.sort(sorted_slots, function(a, b) return a.x < b.x end)
-
-    return sorted_slots
+    return slots
 end
 
 local function GetRegisteredFarmTiles(inst)
@@ -213,7 +215,7 @@ end
 
 local function IsInSlot(target, slots)
     local tx, _, tz = target.Transform:GetWorldPosition()
-    for _, slot in ipairs(slots) do
+    for _, slot in pairs(slots) do
         local sx, sz = slot.x, slot.z
         local range = 0.21
 
@@ -229,7 +231,7 @@ local Fillers = {
         if inst:GetFarmBlueprint() == nil then return false end
         local tiles = GetRegisteredFarmTiles(inst)
 
-        for _, tile in ipairs(tiles) do
+        for _, tile in orderedPairs(tiles) do
             local targets = TheSim:FindEntities(tile.x, tile.y, tile.z, 2.65, { "oversized_veggie" })
             for _, target in ipairs(targets) do
                 table.insert(iterator, target)
@@ -242,7 +244,7 @@ local Fillers = {
         if inst:GetFarmBlueprint() == nil or not HasTool(inst) then return false end
         local tiles = GetRegisteredFarmTiles(inst)
 
-        for _, tile in ipairs(tiles) do
+        for _, tile in orderedPairs(tiles) do
             local targets = TheSim:FindEntities(tile.x, tile.y, tile.z, 2.65, nil, SOILMUST, FARM_ENTITIES_TAGS)
 
             for _, target in ipairs(targets) do
@@ -269,8 +271,8 @@ local Fillers = {
         if inst:GetFarmBlueprint() == nil or not HasTool(inst) then return false end
         local tiles = GetRegisteredFarmTiles(inst)
 
-        for _, tile in ipairs(tiles) do
-            for _, slot in ipairs(SortSlots(tile.slots)) do
+        for _, tile in orderedPairs(tiles) do
+            for _, slot in pairs(SortSlots(tile.slots)) do
                 local pos = Vector3(slot.x, slot.y, slot.z)
                 local localsoils = TheSim:FindEntities(pos.x, pos.y, pos.z, 0.21, SOILMUST, SOILMUSTNOT)
 
@@ -288,8 +290,8 @@ local Fillers = {
         local home = inst.components.homeseeker.home
         local container = home.components.container
 
-        for _, tile in ipairs(tiles) do
-            for _, slot in ipairs(SortSlots(tile.slots)) do
+        for _, tile in orderedPairs(tiles) do
+            for _, slot in pairs(SortSlots(tile.slots)) do
                 local localsoils = TheSim:FindEntities(slot.x, slot.y, slot.z, 0.21, SOILMUST, SOILMUSTNOT)
                 local localplants = TheSim:FindEntities(slot.x, slot.y, slot.z, 0.21, nil, nil, FARM_PLANT_TAGS)
 
@@ -308,8 +310,8 @@ local Fillers = {
         if inst:GetFarmBlueprint() == nil or not HasTool(inst) then return false end
         local tiles = GetRegisteredFarmTiles(inst)
 
-        for _, tile in ipairs(tiles) do
-            for _, slot in ipairs(SortSlots(tile.slots)) do
+        for _, tile in orderedPairs(tiles) do
+            for _, slot in pairs(SortSlots(tile.slots)) do
                 local pos = Vector3(slot.x, slot.y, slot.z)
                 local localplants = TheSim:FindEntities(pos.x, pos.y, pos.z, 0.21, nil, nil, FARM_PLANT_TAGS)
 
@@ -324,7 +326,7 @@ local Fillers = {
         if inst:GetFarmBlueprint() == nil then return false end
         local tiles = GetRegisteredFarmTiles(inst)
 
-        for _, tile in ipairs(tiles) do
+        for _, tile in orderedPairs(tiles) do
             local x, z = TheWorld.Map:GetTileCoordsAtPoint(tile.x, tile.y, tile.z)
             local formula, compost, manure = TheWorld.components.farming_manager:GetTileNutrients(x, z)
             local target = { x = tile.x, y = tile.y, z = tile.z, nutrients = { formula, compost, manure } }
@@ -341,7 +343,7 @@ local Fillers = {
 
         local tiles = GetRegisteredFarmTiles(inst)
 
-        for _, tile in ipairs(tiles) do
+        for _, tile in orderedPairs(tiles) do
             if GetSoilMoisture(tile.x, tile.y, tile.z) <= 75 then table.insert(iterator, tile) end
         end
 
@@ -351,8 +353,8 @@ local Fillers = {
         if inst:GetFarmBlueprint() == nil then return false end
         local tiles = GetRegisteredFarmTiles(inst)
 
-        for _, tile in ipairs(tiles) do
-            for _, slot in ipairs(SortSlots(tile.slots)) do
+        for _, tile in orderedPairs(tiles) do
+            for _, slot in pairs(SortSlots(tile.slots)) do
                 if slot.assigned_plant and not slot.assigned_plant.prefab:find("weed") then
                     local localplants = TheSim:FindEntities(slot.x, slot.y, slot.z, 0.21, nil, nil, FARM_PLANT_TAGS)
 
@@ -370,18 +372,19 @@ local Fillers = {
     HarvestedPlants = function(inst, iterator)
         if inst:GetFarmBlueprint() == nil then return false end
         local tiles = GetRegisteredFarmTiles(inst)
+        local container = inst:GetHome().components.container
 
-        for _, tile in ipairs(tiles) do
+        for _, tile in orderedPairs(tiles) do
             local targets = TheSim:FindEntities(tile.x, tile.y, tile.z, 4, nil, nil, {
                 "edible_VEGGIE", "edible_SEEDS", "show_spoiled", "weed"
             })
+            container.currentuser = inst
             for _, target in ipairs(targets) do
-                if not target:IsInLimbo() then
-                    if not target:HasTag("show_spoiled") or target.prefab == "spoiled_food" then
-                        table.insert(iterator, target)
-                    end
+                if not target:IsInLimbo() and container:GetSpecificSlotForItem(target) then
+                    table.insert(iterator, target)
                 end
             end
+            container.currentuser = nil
         end
 
         return #iterator > 0
@@ -403,31 +406,33 @@ local Actions = {
             end
 
             local tool = nil
-
+            local action = nil
             for _, ent in ipairs(ents) do
                 if ent:HasTag("merm_tool_upgraded") then
+                    inst:UnequipHands()
                     return BufferedAction(inst, ent, ACTIONS.PICKUP) -- High priority.
                 end
 
                 tool = ent
             end
 
-            return tool ~= nil and BufferedAction(inst, tool, ACTIONS.PICKUP) or nil
+            if tool ~= nil then
+                inst:UnequipHands()
+                return BufferedAction(inst, tool, ACTIONS.PICKUP)
+            end
         end
     end,
     CollectTool = function(inst)
-        if not NeedsTool(inst) then
-            return
-        end
+        if not NeedsTool(inst) then return end
 
         local shed = GetClosestToolShed(inst, 2.5)
         if shed ~= nil then
+            inst:UnequipHands()
             inst:PushEvent("merm_use_building", { target = shed })
         end
     end,
     Hammer = function(inst, iterator)
         local target = table.remove(iterator, 1)
-        inst:EquipTool()
         return BufferedAction(inst, target, ACTIONS.HAMMER)
     end,
     Dig = function(inst, iterator)
@@ -484,7 +489,7 @@ local Actions = {
     WaterTile = function(inst, iterator)
         local target = table.remove(iterator, 1)
         local watering_can = inst:EquipWateringCan()
-        print(watering_can)
+
         if watering_can ~= nil then
             local pos = Vector3(target.x, target.y, target.z)
 
@@ -507,138 +512,143 @@ local Actions = {
             inst:UnequipHands()
             return BufferedAction(inst, inst:GetHome(), ACTIONS.MERMFARMER_DUMP_INVENTORY)
         end
+    end,
+    GoHome = function(inst)
+        if inst.components.combat.target == nil then
+            return
+        end
+
+        local home = inst.components.homeseeker ~= nil and inst.components.homeseeker.home or nil
+        local home_is_valid = home ~= nil and home:IsValid()
+            and not (home.components.burnable ~= nil and home.components.burnable:IsBurning())
+            and not home:HasTag("burnt")
+
+        if home and home_is_valid then
+            inst:UnequipHands()
+
+            for k in pairs(inst.components.inventory.itemslots) do
+                local item = inst.components.inventory:RemoveItemBySlot(k)
+                if item then
+                    home.components.container:GiveItem(item)
+                end
+            end
+
+            if HasCollectedHarvestToStore(inst) then
+                return BufferedAction(inst, inst:GetHome(), ACTIONS.MERMFARMER_DUMP_INVENTORY)
+            end
+
+            return BufferedAction(inst, home, ACTIONS.GOHOME)
+        end
     end
 }
 
-local function GoHomeAction(inst)
-    if inst.components.combat.target == nil then
-        return
-    end
 
-    local home = inst.components.homeseeker ~= nil and inst.components.homeseeker.home or nil
-    local home_is_valid = home ~= nil and home:IsValid()
-        and not (home.components.burnable ~= nil and home.components.burnable:IsBurning())
-        and not home:HasTag("burnt")
-
-    if home and home_is_valid then
-        inst:UnequipHands()
-
-        for k in pairs(inst.components.inventory.itemslots) do
-            local item = inst.components.inventory:RemoveItemBySlot(k)
-            if item then
-                home.components.container:GiveItem(item)
-            end
-        end
-
-        if HasCollectedHarvestToStore(inst) then
-            return BufferedAction(inst, inst:GetHome(), ACTIONS.MERMFARMER_DUMP_INVENTORY)
-        end
-
-        return BufferedAction(inst, home, ACTIONS.GOHOME)
-    end
-end
-
-local function GetNoLeaderHomePos(inst)
-    if inst.components.follower and inst.components.follower.leader ~= nil then
-        return nil
-    else
-        return inst.components.knownlocations:GetLocation("home")
-    end
-end
-
-
-
+local MermBrain = Class(Brain, function(self, inst)
+    Brain._ctor(self, inst)
+end)
 
 function MermBrain:OnStart()
-    local FleeFromCombat = DoAction(self.inst, GoHomeAction, "Flee", true)
-
-    local WaitBlueprint = WhileNode(function() return self.inst:GetFarmBlueprint() == nil end, "Wait Blueprint",
-        Wander(self.inst, GetNoLeaderHomePos, MAX_WANDER_DIST)
-    )
+    local FleeFromCombat = DoAction(self.inst, Actions.GoHome, "Flee", true)
 
     local PickupToolFromGround = DoAction(self.inst, Actions.PickupTool, "collect tool", true)
     local CollectToolFromShed = IfNode(function() return NeedsToolAndFoundTool(self.inst) end, "needs a tool",
         PriorityNode({
             Leash(self.inst, GetClosestToolShedPosition, 2.1, 2, true),
             DoAction(self.inst, Actions.CollectTool, "collect tool", true),
-        }, 0.25))
+        }, 0.25)
+    )
 
-    local HammerOversized = IterateAndDoActionNode(self, {
-        name = "HAMMER_OVERSIZED_PLANTS",
-        starter = Fillers.PlantsToHammer,
-        action = Actions.Hammer,
-        run = true
-    })
-    local DigUnwanted = IterateAndDoActionNode(self, {
-        name = "DIG_UNWANTED", -- Required.
-        chatterstring = "MERM_TALK_HELP_TILL",
-        starter = Fillers.UnwantedEntities,
-        action = Actions.Dig,
-        run = true
-    })
-    local Harvest = IterateAndDoActionNode(self, {
-        name = "HARVEST", -- Required.
-        starter = Fillers.PlantsToHarvest,
-        action = Actions.Harvest,
-        run = true
-    })
-    local CollectHarvest = IterateAndDoActionNode(self, {
-        name = "COLLECT_HARVEST", -- Required.
-        starter = Fillers.HarvestedPlants,
-        action = Actions.Collect,
-        run = true
-    })
-    local Plant = IterateAndDoActionNode(self, {
-        name = "PLANT", -- Required.
-        starter = Fillers.SoilsToPlant,
-        action = Actions.Plant,
-        run = true
-    })
-    local Till = IterateAndDoActionNode(self, {
-        name = "TILL", -- Required.
-        chatterstring = "MERM_TALK_HELP_TILL",
-        starter = Fillers.SpotsToTill,
-        action = Actions.Till,
-        run = true
-    })
     local StoreHarvest = DoAction(self.inst, Actions.Store, "STORE_HARVEST", true)
-    local Fertilize = IterateAndDoActionNode(self, {
-        name = "FERTILIZE", -- Required.
-        starter = Fillers.TilesToFertilize,
-        action = Actions.Fertilize,
-        run = true
-    })
     local FillWateringCan = DoAction(self.inst, Actions.FillWateringCan, "FILL_WATERINGCAN", true)
-    local WaterTile = IterateAndDoActionNode(self, {
-        name = "WATER_TILES", -- Required.
-        starter = Fillers.TilesToWater,
-        action = Actions.WaterTile,
-        run = true
-    })
-    local Tend = IterateAndDoActionNode(self, {
-        name = "TEND", -- Required.
-        starter = Fillers.PlantsToTend,
-        action = Actions.Tend,
-        run = true
+
+    local IteratorNodes = {
+        Clear = function(self)
+            print("clearing iterators")
+            for _, iterator_node in pairs(self) do
+                if type(iterator_node) ~= "function" then iterator_node:ClearIterator() end
+            end
+        end,
+        HammerOversized = IterateAndDoActionNode(self, {
+            name = "HAMMER_OVERSIZED_PLANTS",
+            starter = Fillers.PlantsToHammer,
+            action = Actions.Hammer,
+            run = true
+        }),
+        DigUnwanted = IterateAndDoActionNode(self, {
+            name = "DIG_UNWANTED", -- Required.
+            chatterstring = "MERM_TALK_HELP_TILL",
+            starter = Fillers.UnwantedEntities,
+            action = Actions.Dig,
+            run = true
+        }),
+        Harvest = IterateAndDoActionNode(self, {
+            name = "HARVEST", -- Required.
+            starter = Fillers.PlantsToHarvest,
+            action = Actions.Harvest,
+            run = true
+        }),
+        CollectHarvest = IterateAndDoActionNode(self, {
+            name = "COLLECT_HARVEST", -- Required.
+            starter = Fillers.HarvestedPlants,
+            action = Actions.Collect,
+            run = true
+        }),
+        Plant = IterateAndDoActionNode(self, {
+            name = "PLANT", -- Required.
+            starter = Fillers.SoilsToPlant,
+            action = Actions.Plant,
+            run = true
+        }),
+        Till = IterateAndDoActionNode(self, {
+            name = "TILL", -- Required.
+            chatterstring = "MERM_TALK_HELP_TILL",
+            starter = Fillers.SpotsToTill,
+            action = Actions.Till,
+            run = true
+        }),
+        Fertilize = IterateAndDoActionNode(self, {
+            name = "FERTILIZE", -- Required.
+            starter = Fillers.TilesToFertilize,
+            action = Actions.Fertilize,
+            run = true
+        }),
+        WaterTile = IterateAndDoActionNode(self, {
+            name = "WATER_TILES", -- Required.
+            starter = Fillers.TilesToWater,
+            action = Actions.WaterTile,
+            run = true
+        }),
+        Tend = IterateAndDoActionNode(self, {
+            name = "TEND", -- Required.
+            starter = Fillers.PlantsToTend,
+            action = Actions.Tend,
+            run = true
+        }),
+    }
+
+    local ClearIterators = DoAction(self.inst, function() IteratorNodes:Clear() end, "ClearIterators")
+    local IfNoBlueprint = IfNode(function() return NeedsBlueprint(self.inst) end, "IfNoBlueprint", PriorityNode {
+        ClearIterators,
+        Wander(self.inst, GetNoLeaderHomePos, MAX_WANDER_DIST)
     })
 
     local root = PriorityNode({
         BrainCommon.PanicTrigger(self.inst),
         FleeFromCombat,
-        WaitBlueprint,
+        IfNoBlueprint,
         PickupToolFromGround,
         CollectToolFromShed,
-        HammerOversized,
-        DigUnwanted,
-        Harvest,
-        CollectHarvest,
-        Till,
-        Plant,
+        IteratorNodes.HammerOversized,
+        IteratorNodes.DigUnwanted,
+        IteratorNodes.Harvest,
+        IteratorNodes.CollectHarvest,
+        IteratorNodes.Till,
+        IteratorNodes.Plant,
         StoreHarvest,
-        Fertilize,
+        IteratorNodes.Fertilize,
         FillWateringCan,
-        WaterTile,
-        Tend,
+        IteratorNodes.WaterTile,
+        IteratorNodes.Tend,
         FaceEntity(self.inst, GetFaceTargetFn, KeepFaceTargetFn),
         Wander(self.inst, GetNoLeaderHomePos, MAX_WANDER_DIST)
     }, .2)

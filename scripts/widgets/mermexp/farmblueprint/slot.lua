@@ -26,25 +26,34 @@ local FarmBlueprintSlot = Class(ImageButton, function(self, root, blueprint, til
   end
 end)
 
-function FarmBlueprintSlot:OnControl(control, down)
-  local root = self.root
-  local is_carrying_seed, has_planted_seeds = root.carried_seeds ~= nil, self.planted_seeds ~= nil
-  local isleftup, isrightup = control == CONTROL_ACCEPT and not down, control == CONTROL_SECONDARY and not down
+function FarmBlueprintSlot:AddSeeds()
+  if self.planted_seeds ~= nil then self.planted_seeds:Kill() end
+  self.planted_seeds = self:AddChild(FarmBlueprintSeed(self.root.carried_seeds.id, -TheCamera:GetHeadingTarget() + 90))
+  self.blueprint:SetAssignedPlant(self.tileid, self.index, self.planted_seeds.id)
+end
 
-  if isleftup and is_carrying_seed then
-    if self.planted_seeds ~= nil then self.planted_seeds:Kill() end
+function FarmBlueprintSlot:RemoveSeeds()
+  if self.planted_seeds ~= nil then self.planted_seeds:Kill() end
+  self.planted_seeds = nil
+  self.blueprint:SetAssignedPlant(self.tileid, self.index, nil)
+end
 
-    self.planted_seeds = self:AddChild(FarmBlueprintSeed(root.carried_seeds.id, -TheCamera:GetHeadingTarget() + 90))
-
-    self.blueprint:SetAssignedPlant(self.tileid, self.index, self.planted_seeds.id)
+function FarmBlueprintSlot:OnGainFocus()
+  if self.root.painting and self.root.carried_seeds ~= nil then
+    self:AddSeeds()
+  elseif self.root.erasing and self.planted_seeds ~= nil then
+    self:RemoveSeeds()
   end
-  if isrightup and has_planted_seeds and not (self.dragged or self.dragging) then
-    self.planted_seeds:Kill()
-    self.planted_seeds = nil
-    self.blueprint:SetAssignedPlant(self.tileid, self.index, nil)
-  end
+  return self._base.OnGainFocus(self)
+end
 
-  return self._base.OnControl(self, control, down)
+function FarmBlueprintSlot:OnMouseButton(button, down, x, y)
+  local isleftdown, isrightdown = button == MOUSEBUTTON_LEFT and down, button == MOUSEBUTTON_RIGHT and down
+
+  if isleftdown then self:AddSeeds() end
+  if isrightdown then self:RemoveSeeds() end
+
+  return self._base.OnMouseButton(self, button, down, x, y)
 end
 
 function FarmBlueprintSlot:OnRotate(angle)

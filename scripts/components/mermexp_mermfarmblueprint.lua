@@ -2,70 +2,86 @@ local CONSTANTS = require "mermexp.constants"
 local FARM_PLANT_TAGS = CONSTANTS.FARM_PLANT_TAGS
 local Util = require "mermexp.util"
 
-local MAP_3x3 = {
-  { 1.333,  1.333 },
-  { 0,      1.333 },
-  { -1.333, 1.333 },
-  { 1.333,  0 },
-  { 0,      0 },
-  { -1.333, 0 },
-  { 1.333,  -1.333 },
-  { 0,      -1.333 },
-  { -1.333, -1.333 },
-}
-
-local function Replica_RegisterTile(self, tag, tile)
-  self.inst.replica.mermexp_mermfarmblueprint:RegisterFarmTile(tag, tile)
+local function Classified_RegisterFarmTile(self, tile)
+  local classified = self.inst.replica.mermexp_mermfarmblueprint.classified
+  if classified ~= nil then classified:RegisterFarmTile(tile) end
 end
 
-local function Replica_UnregisterTile(self, tag)
-  self.inst.replica.mermexp_mermfarmblueprint:UnregisterFarmTile(tag)
+local function Classified_UnregisterFarmTile(self, x, y, z)
+  local classified = self.inst.replica.mermexp_mermfarmblueprint.classified
+  if classified ~= nil then classified:UnregisterFarmTile(x, y, z) end
 end
 
-local function on_registeredtiles(self, registeredtiles)
-  print("on_registeredtiles:", CalledFrom())
-  self.inst.replica.mermexp_mermfarmblueprint:SetRegisteredTiles(registeredtiles)
+local function Classified_ClearFarmTiles(self)
+  local classified = self.inst.replica.mermexp_mermfarmblueprint.classified
+  if classified ~= nil then classified:ClearFarmTiles() end
 end
 
--- local function OnEnterLimbo(inst, data)
---   local self = inst.components.mermexp_mermfarmblueprint
---   for k, tile in pairs(self.registeredtiles) do
---     for _, slot in ipairs(tile.slots) do
---       print(k, slot.assigned_plant)
---     end
---   end
--- end
+local function Classified_SetAssignedPlant(self, tag, slotidx, plant)
+  local classified = self.inst.replica.mermexp_mermfarmblueprint.classified
+  if classified ~= nil then classified:SetAssignedPlant(tag, slotidx, plant) end
+end
 
-local function OnExitLimbo(inst, data)
+local function Classified_SetRegisteredFarmTiles(self, registeredtiles)
+  local classified = self.inst.replica.mermexp_mermfarmblueprint.classified
+  if classified ~= nil then classified:SetRegisteredFarmTiles(registeredtiles) end
+end
+
+local function OnEnterLimbo(inst)
   local self = inst.components.mermexp_mermfarmblueprint
-  on_registeredtiles(self, self.registeredtiles)
+  local owner = inst.components.inventoryitem.owner
+
+  if owner ~= nil and owner:HasTag("player") and owner ~= self.owner then
+    Classified_SetRegisteredFarmTiles(self, self:GetRegisteredFarmTiles())
+  end
+
+  self.owner = owner
 end
+
+local function OnDropped(inst)
+  local self = inst.components.mermexp_mermfarmblueprint
+  self.owner = nil
+end
+
+---@class FarmTileSlot
+---@field x number
+---@field y number
+---@field z number
+---@field assigned_plant Plant?
+
+---@class FarmTile
+---@field x number
+---@field y number
+---@field z number
+---@field slots FarmTileSlot[]
 
 local FarmBlueprint = Class(function(self, inst)
     self.inst = inst
 
-    self.onchangefn = nil
     self.registeredtiles = {}
 
-    -- self.inst:ListenForEvent("enterlimbo", OnEnterLimbo)
-    self.inst:ListenForEvent("exitlimbo", OnExitLimbo)
+    self.owner = nil
+    self.inst:ListenForEvent("enterlimbo", OnEnterLimbo)
+    self.inst:ListenForEvent("ondropped", OnDropped)
   end,
   nil,
   {
-    registeredtiles = on_registeredtiles,
+    registeredtiles = Classified_SetRegisteredFarmTiles,
   }
 )
 
-function FarmBlueprint:SetOnChangeFn(fn)
-  self.onchangefn = fn
-end
-
+---comment
+---@param x number
+---@param y number
+---@param z number
+---@param capturelayout boolean
+---@return FarmTile
 local function MakeTile(x, y, z, capturelayout)
   local tcx, tcy, tcz = TheWorld.Map:GetTileCenterPoint(x, y, z)
 
   local slots = {}
-  for i, offsets in ipairs(MAP_3x3) do
-    slots[i] = {
+  for i, offsets in ipairs(CONSTANTS.TILE3x3) do
+    local slot = {
       assigned_plant = nil,
       x = tcx + offsets[1],
       y = 0,
@@ -73,63 +89,152 @@ local function MakeTile(x, y, z, capturelayout)
     }
 
     if capturelayout then
-      local plant = TheSim:FindEntities(slots[i].x, slots[i].y, slots[i].z, 0.21, FARM_PLANT_TAGS)[1]
+      local plant = TheSim:FindEntities(slot.x, slot.y, slot.z, 0.21, FARM_PLANT_TAGS)[1]
       if plant ~= nil then
-        slots[i].assigned_plant = CONSTANTS.PLANTABLES:At(plant.prefab)
+        slot.assigned_plant = CONSTANTS.PLANTABLES:At(plant.prefab)
       end
     end
+
+    slots[tostring(i)] = slot
   end
 
   return { x = tcx, y = tcy, z = tcz, slots = slots }
 end
 
-function FarmBlueprint:GetAssignedPlant(tile_tag, slot_index)
-  if self.registeredtiles[tile_tag] == nil then return nil end
-
-  local slot_array = self.registeredtiles[tile_tag].slots
-  if not slot_array or not slot_array[slot_index] then return nil end
-
-  return slot_array[slot_index].assigned_plant
-end
-
-function FarmBlueprint:SetAssignedPlant(tile_tag, slot_index, plant)
-  local tile = self.registeredtiles[tile_tag]
-  local slot_array = tile.slots
-
-  if not slot_array or not slot_array[slot_index] then return end
-
-  slot_array[slot_index].assigned_plant = plant and CONSTANTS.PLANTABLES:At(plant) or nil
-
-  if self.onchangefn ~= nil then self.onchangefn() end
-end
-
+---Registers a farm tile to the blueprint
+---@param x number
+---@param y number
+---@param z number
+---@param capturelayout boolean
+---@return boolean
 function FarmBlueprint:RegisterFarmTile(x, y, z, capturelayout)
   local tiletag = Util.TileTag(x, y, z)
   if self.registeredtiles[tiletag] ~= nil and not capturelayout then return false end
 
   self.registeredtiles[tiletag] = MakeTile(x, y, z, capturelayout)
 
-  Replica_RegisterTile(self, tiletag, self.registeredtiles[tiletag])
+  Classified_RegisterFarmTile(self, self.registeredtiles[tiletag])
 
-  if self.onchangefn ~= nil then self.onchangefn() end
+  self.inst:PushEvent("registerfarmtile")
+  self.inst:PushEvent("change")
 
   return true
 end
 
-function FarmBlueprint:UnregisterFarmTile(tilept, y, z)
-  local tiletag = type(tilept) == "string" and tilept or Util.TileTag(tilept, y, z)
+---Unregisters a farm tile from the blueprint
+---@param x_or_tag number | string
+---@param y number
+---@param z number
+---@return boolean
+function FarmBlueprint:UnregisterFarmTile(x_or_tag, y, z)
+  local tiletag = type(x_or_tag) == "string" and x_or_tag or Util.TileTag(x_or_tag, y, z)
 
   if self.registeredtiles[tiletag] == nil then return false end
 
   self.registeredtiles[tiletag] = nil
 
-  Replica_UnregisterTile(self, tiletag)
+  Classified_UnregisterFarmTile(self, x_or_tag, y, z)
 
-  if self.onchangefn ~= nil then self.onchangefn() end
+  self.inst:PushEvent("unregisterfarmtile")
+  self.inst:PushEvent("change")
 
   return true
 end
 
+---Removes assigned plants in all the tiles's slots
+function FarmBlueprint:ClearFarmTiles()
+  for _, tile in pairs(self.registeredtiles) do
+    for _, slot in pairs(tile.slots) do
+      slot.assigned_plant = nil
+    end
+  end
+
+  Classified_ClearFarmTiles(self)
+
+  self.inst:PushEvent("clearfarmtiles")
+  self.inst:PushEvent("change")
+end
+
+---Gets all registered farm tiles
+---@return { [string]: FarmTile }
+function FarmBlueprint:GetRegisteredFarmTiles()
+  return self.registeredtiles
+end
+
+---Gets the tile's slot's assigned plant
+---@param tag string
+---@param slotidx number
+---@return Plant?
+function FarmBlueprint:GetAssignedPlant(tag, slotidx)
+  if self.registeredtiles[tag] == nil then return nil end
+  local slotkey = tostring(slotidx)
+  local slots = self.registeredtiles[tag].slots
+  if not slots or not slots[slotkey] then return nil end
+
+  return slots[slotkey].assigned_plant
+end
+
+---Gets the assigned plant that corresponds to x, z
+---@param x number
+---@param z number
+---@return Plant?
+function FarmBlueprint:GetAssignedPlantAt(x, z)
+  for _, tile in pairs(self.registeredtiles) do
+    for _, slot in pairs(tile.slots) do
+      local sx, sz = slot.x, slot.z
+      local range = 0.21
+
+      if sx - range <= x and x <= sx + range and sz - range <= z and z <= sz + range then
+        return slot.assigned_plant
+      end
+    end
+  end
+
+  return nil
+end
+
+---Sets the tile's slot's assigned plant
+---@param tag string
+---@param slotidx number
+---@param plant string
+function FarmBlueprint:SetAssignedPlant(tag, slotidx, plant)
+  local tile = self.registeredtiles[tag]
+  local slots = tile.slots
+  local slotkey = tostring(slotidx)
+
+  if not slots or not slots[slotkey] then return end
+
+  local plant = plant and CONSTANTS.PLANTABLES:At(plant) or nil
+  slots[slotkey].assigned_plant = plant
+
+  Classified_SetAssignedPlant(self, tag, slotidx, plant)
+
+  self.inst:PushEvent("setassignedplant")
+  self.inst:PushEvent("change")
+end
+
+---Gets the registered tile by its world coordinates
+---@param x number
+---@param y number
+---@param z number
+---@return FarmTile?
+function FarmBlueprint:GetRegisteredFarmTileAtPoint(x, y, z)
+  return self.registeredtiles[Util.TileTag(x, y, z)]
+end
+
+---Checks if tile is registered
+---@param x_or_tag number | string
+---@param y number
+---@param z number
+---@return boolean
+function FarmBlueprint:IsRegisteredFarmTile(x_or_tag, y, z)
+  local tiletag = type(x_or_tag) == "string" and x_or_tag or Util.TileTag(x_or_tag, y, z)
+
+  return self.registeredtiles[tiletag] ~= nil
+end
+
+---Gets all unregistered tiles connected to the blueprint's registered tiles
+---@return { [string]: FarmTile }
 function FarmBlueprint:GetUnregisteredConnectedTiles()
   local tiles = {}
 
@@ -149,27 +254,11 @@ function FarmBlueprint:GetUnregisteredConnectedTiles()
   return tiles
 end
 
-function FarmBlueprint:GetRegisteredFarmTiles()
-  return self.registeredtiles
-end
-
-function FarmBlueprint:GetRegisteredFarmTileAtPoint(x, y, z)
-  return self.registeredtiles[Util.TileTag(x, y, z)]
-end
-
-function FarmBlueprint:IsRegisteredFarmTile(x, y, z)
-  local tiletag = type(x) == "string" and x or Util.TileTag(x, y, z)
-
-  return self.registeredtiles[tiletag] ~= nil
-end
-
 function FarmBlueprint:OnSave()
-  print("vou me cagar heing")
   return { registeredtiles = self.registeredtiles }
 end
 
 function FarmBlueprint:OnLoad(data)
-  print("me caguei gente")
   if data.registeredtiles then
     self.registeredtiles = data.registeredtiles
   end

@@ -36,13 +36,7 @@ local FarmBlueprintScreen = Class(Screen, function(self, blueprint)
     self.controls = self.window:AddChild(FarmBlueprint.Controls(self.root))
     self.controls.onrotate = function(angle) self.canvas:Rotate(angle) end
 
-    self.buttons = {
-        { text = "X", cb = function() TheFrontEnd:PopScreen() end }
-    }
-
-    self.menu = self.root:AddChild(Menu(self.buttons, 0, true))
-    self.menu:SetPosition(400, 300, 0)
-    self.default_focus = self.menu
+    SetAutopaused(true)
 end)
 
 function FarmBlueprintScreen:OnUpdate(dt)
@@ -56,9 +50,23 @@ function FarmBlueprintScreen:OnUpdate(dt)
     return true
 end
 
+function FarmBlueprintScreen:OnMouseButton(button, down, x, y)
+    self.canvas:OnMouseButton(button, down, x, y)
+    return self._base.OnMouseButton(self, button, down, x, y)
+end
+
 function FarmBlueprintScreen:OnControl(control, down)
-    if control == CONTROL_SECONDARY and not down then
-        self.canvas:StopDrag()
+    if (control == CONTROL_MENU_BACK or control == CONTROL_CANCEL) then
+        if self.root.carried_seeds ~= nil and down then
+            self.root.carried_seeds:Kill()
+        elseif self.root.carried_seeds == nil and not down then
+            TheFrontEnd:GetSound():PlaySound("dontstarve/HUD/click_move")
+            TheFrontEnd:PopScreen()
+        elseif not down then
+            self.root.carried_seeds = nil
+        end
+
+        return true
     end
 
     if FarmBlueprintScreen._base.OnControl(self, control, down) then
@@ -66,19 +74,18 @@ function FarmBlueprintScreen:OnControl(control, down)
     end
 end
 
+function FarmBlueprintScreen:OnDestroy()
+    SetAutopaused(false)
+
+    POPUPS.MERMEXP_MERMFARMBLUEPRINT:Close(ThePlayer)
+
+    FarmBlueprintScreen._base.OnDestroy(self)
+end
+
 function FarmBlueprintScreen:OnRawKey(key, down)
     if not down then return end
 
-    if key == KEY_ESCAPE then
-        if self.root.carried_seeds ~= nil then
-            self.root.carried_seeds:Kill()
-            self.root.carried_seeds = nil
-            return true
-        else
-            TheFrontEnd:PopScreen()
-            return false
-        end
-    elseif key == KEY_E then
+    if key == KEY_E then
         ThePlayer.components.playercontroller:RotRight()
         return true
     elseif key == KEY_Q then

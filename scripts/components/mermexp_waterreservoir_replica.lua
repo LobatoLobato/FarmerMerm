@@ -4,9 +4,6 @@ local WaterReservoir = Class(function(self, inst)
   self.level = net_ushortint(inst.GUID, "mxp.waterreservoir.level", "mxp.waterreservoir.leveldirty")
 end)
 
-
-
-
 function WaterReservoir:SetLevel(level)
   if self.inst.components.mermexp_waterreservoir then
     self.level:set(level)

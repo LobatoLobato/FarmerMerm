@@ -5,17 +5,19 @@ local Seeds = require "widgets.mermexp.farmblueprint.seed"
 
 local CONSTANTS = require "mermexp.constants"
 
-local POS_Y_1 = -272
+local POS_Y_1 = 272
+local POS_Y_2 = -272
 
 local SEED_BUTTON_WIDTH, SEED_SPACE_BETWEEN = 22, 18
 
 local FarmBlueprintControls = Class(Widget, function(self, root)
     Widget._ctor(self, "Farm Blueprint Controls")
     self.root = root
-    -- add clear button
 
     self:AddSeedBar()
     self:AddRotationControls()
+    self:AddCloseButton()
+    self:AddClearButton()
 
     self:RefreshTooltips()
 
@@ -52,7 +54,6 @@ function FarmBlueprintControls:AddSeedBar()
     local seed_buttons = {}
     for _, plantable in ipairs(CONSTANTS.PLANTABLES) do
         if plantable.name ~= "seeds" then
-            -- local bg = Image("images/global.xml", "square.tex")
             local button = ImageButton(CONSTANTS.UI_ICONS_ATLAS, plantable.name .. "_slot.tex",
                 nil, nil, nil, nil, { 1, 1 }, { 0, 0 }
             )
@@ -60,14 +61,15 @@ function FarmBlueprintControls:AddSeedBar()
             button:SetScale(SEED_BUTTON_WIDTH / 48, SEED_BUTTON_WIDTH / 48)
 
             button.onclick = function()
-                local carried_seeds = self.root.carried_seeds
-                if carried_seeds ~= nil then
-                    carried_seeds:Kill()
+                if self.root.carried_seeds ~= nil then
+                    self.root.carried_seeds:Kill()
                 end
 
-                if carried_seeds == nil or carried_seeds.id ~= plantable.name then
+                if self.root.carried_seeds == nil or self.root.carried_seeds.id ~= plantable.name then
                     self.root.carried_seeds = self.root:AddChild(Seeds(plantable.name))
                     self.root.carried_seeds:FollowMouse()
+                else
+                    self.root.carried_seeds = nil
                 end
             end
 
@@ -76,11 +78,11 @@ function FarmBlueprintControls:AddSeedBar()
     end
 
     self.seedbar = self:AddChild(Menu(seed_buttons, spacing, true))
-    self.seedbar:SetPosition(-(spacing * (#seed_buttons - 1)) / 2, POS_Y_1)
+    self.seedbar:SetPosition(-(spacing * (#seed_buttons - 1)) / 2, POS_Y_2)
 end
 
 function FarmBlueprintControls:AddRotationControls()
-    local rot_pos_x, rot_pos_y = 1024 / 2 - 100, POS_Y_1
+    local rot_pos_x, rot_pos_y = 1024 / 2 - 100, POS_Y_2
     self.rotleft = self:AddChild(ImageButton(HUD_ATLAS, "turnarrow_icon.tex", nil, nil, nil, nil, { 1, 1 }, { 0, 0 }))
     self.rotleft:SetPosition(rot_pos_x - 30, rot_pos_y, 0)
     self.rotleft:SetScale(-.7, .4, .4)
@@ -90,6 +92,26 @@ function FarmBlueprintControls:AddRotationControls()
     self.rotright:SetPosition(rot_pos_x + 30, rot_pos_y, 0)
     self.rotright:SetScale(.7, .4, .4)
     self.rotright:SetOnClick(function() self:OnRotateRight() end)
+end
+
+function FarmBlueprintControls:AddCloseButton()
+    self.closebtn = self:AddChild(ImageButton(CONSTANTS.UI_HUD_ATLAS, "close_button.tex", nil, nil, nil, nil,
+        { 1, 1 },
+        { 0, 0 }
+    ))
+    self.closebtn:SetPosition(496, POS_Y_1)
+    self.closebtn:SetScale(.5, .5, .5)
+    self.closebtn:SetOnClick(function() TheFrontEnd:PopScreen() end)
+end
+
+function FarmBlueprintControls:AddClearButton()
+    self.clearbtn = self:AddChild(ImageButton(CONSTANTS.UI_HUD_ATLAS, "clear_button.tex", nil, nil, nil, nil,
+        { 1, 1 },
+        { 0, 0 }
+    ))
+    self.clearbtn:SetPosition(-412, POS_Y_2)
+    self.clearbtn:SetScale(.5, .5, .5)
+    self.clearbtn:SetOnClick(function() self.root:GetParent().canvas:ClearTiles() end)
 end
 
 return FarmBlueprintControls

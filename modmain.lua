@@ -2,10 +2,12 @@ modimport "init/config.lua"
 modimport "init/actions"
 modimport "init/recipes"
 modimport "init/popups.lua"
-modimport "init/skilltree_wurt.lua"
 modimport "init/RPCs.lua"
-modimport "init/classpostconstruct.lua"
 modimport "init/strings.lua"
+modimport "init/prefabs/skilltree_wurt.lua"
+modimport "init/stategraphs/SGmerm.lua"
+modimport "init/widgets/containerwidget.lua"
+modimport "postinit/brains/friendlyfruitflybrain.lua"
 
 PrefabFiles = {
   "mermexp_merm_farmer",
@@ -42,14 +44,6 @@ if ENABLE_DEBUG_FNS then
   ---comment
   ---@param amount number
   function GiveEverySeed(amount)
-    for _, v in pairs(require("prefabs.farm_plant_defs").PLANT_DEFS) do c_give(v, 40) end
+    for _, v in pairs(require("prefabs.farm_plant_defs").PLANT_DEFS) do c_give(v.seed, 40) end
   end
 end
-
--- local oldpushevent = GLOBAL.EntityScript.PushEvent
--- function GLOBAL.EntityScript:PushEvent(event, data)
---   print("entityscript:PushEvent:", CalledFrom())
---   return oldpushevent(self, event, data)
--- end
-
--- FarmMerm House unlocked on merm king upgrade

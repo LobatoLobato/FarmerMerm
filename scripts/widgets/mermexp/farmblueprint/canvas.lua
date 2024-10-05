@@ -17,9 +17,8 @@ local FarmBlueprintCanvas = Class(Image, function(self, root, blueprint, width, 
   self:SetSize(width, height)
   self:SetScissor(-((width - 20) / 2), -((height - 40) / 2), width - 20, height - 40)
 
+  self.inst:ListenForEvent("clearfarmtiles", function() self:DrawTiles(self.blueprint) end, blueprint)
   self:DrawTiles(self.blueprint)
-
-  self:Rotate(TheCamera:GetHeadingTarget())
 
   self.dragging = false
 end)
@@ -42,7 +41,7 @@ local function NormalizeTiles(tiles)
   for id, tile in pairs(tiles) do
     table.insert(normalized_tiles, {
       id = id,
-      world_pos = { x = tile.x, y = tile.y, z = tile.z },
+      world_pos = Vector3(tile.x, tile.y, tile.z),
       x = (tile.x - x_limits.min) / 4,
       y = (tile.z - y_limits.min) / 4,
     })
@@ -58,6 +57,7 @@ function FarmBlueprintCanvas:DrawTiles(blueprint)
   local tiles = blueprint:GetUnregisteredConnectedTiles()
   local normalized_tiles, x_limits, y_limits = NormalizeTiles(tiles)
 
+  if self.tiles ~= nil then self.tiles:Kill() end
   self.tiles = self:AddChild(Widget("FarmBlueprintTiles"))
   self.tiles:SetVAnchor(ANCHOR_MIDDLE)
   self.tiles:SetHAnchor(ANCHOR_MIDDLE)
@@ -81,20 +81,24 @@ function FarmBlueprintCanvas:DrawTiles(blueprint)
     local tile = FarmBlueprintTile(self.root, self.blueprint, tile.id, tile.world_pos, TILE_SIZE, TILE_SIZE, pos_x, pos_y)
     self.tiles:AddChild(tile)
   end
+
+  self:Rotate(TheCamera:GetHeadingTarget())
+end
+
+function FarmBlueprintCanvas:ClearTiles()
+  self.blueprint:ClearFarmTiles()
 end
 
 function FarmBlueprintCanvas:StartDrag()
   if self.followhandler == nil then
     local function diff(a, b) return math.max(a, b) - math.min(a, b) end
-    local p_t, p_b, p_x = 80, 120, 120 -- Padding
+    local p_t, p_b, p_x = 80, 80, 120 -- Padding
 
     local window_w, window_h = self:GetScaledSize()
     local cursor_drag_origin = TheInput:GetScreenPosition()
 
     local tiles_w, tiles_h = self.tiles:GetRotatedSize()
     local tile_drag_origin = self.tiles:GetPosition()
-
-    self.dragged = false
 
     self.followhandler = TheInput:AddMoveHandler(function(x, y)
       local pos_x = tile_drag_origin.x + (x - cursor_drag_origin.x)
@@ -109,11 +113,6 @@ function FarmBlueprintCanvas:StartDrag()
       pos_y = math.clamp(pos_y, -(remaining_h_bottom / 2), (remaining_h_top / 2))
 
       self.tiles:UpdatePosition(pos_x, pos_y)
-
-      local moved_x = pos_x > tile_drag_origin.x + 1 or pos_x < tile_drag_origin.x - 1
-      local moved_y = pos_y > tile_drag_origin.y + 1 or pos_y < tile_drag_origin.y - 1
-
-      self.dragged = moved_x or moved_y
     end)
 
     self.dragging = true
@@ -128,14 +127,22 @@ function FarmBlueprintCanvas:StopDrag()
   end
 end
 
-function FarmBlueprintCanvas:OnControl(control, down)
-  if control == CONTROL_SECONDARY and not self.dragging and down then
+function FarmBlueprintCanvas:OnMouseButton(button, down, x, y)
+  if button == MOUSEBUTTON_MIDDLE and not self.dragging and down then
     self:StartDrag()
-  elseif control == CONTROL_SECONDARY and self.dragging and not down then
+  elseif button == MOUSEBUTTON_MIDDLE and self.dragging and not down then
     self:StopDrag()
+  elseif button == MOUSEBUTTON_LEFT and not self.dragging and down then
+    self.root.painting = true
+  elseif button == MOUSEBUTTON_LEFT and not down then
+    self.root.painting = false
+  elseif button == MOUSEBUTTON_RIGHT and not self.dragging and down then
+    self.root.erasing = true
+  elseif button == MOUSEBUTTON_RIGHT and not down then
+    self.root.erasing = false
   end
 
-  return self._base.OnControl(self, control, down)
+  return self._base.OnMouseButton(self, button, down, x, y)
 end
 
 function FarmBlueprintCanvas:Rotate(angle)

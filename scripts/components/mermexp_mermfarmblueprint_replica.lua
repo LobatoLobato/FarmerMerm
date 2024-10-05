@@ -1,185 +1,46 @@
-local CONSTANTS = require "mermexp.constants"
-local Util = require "mermexp.util"
-local JSON = require "mermexp.util.json"
-
 local FarmBlueprint = Class(function(self, inst)
   self.inst = inst
-  self._onchangefn = nil
-  self._registeredtiles = {}
 
-  self._initializeevent = net_event(inst.GUID, "mxp.mermfarmblueprint._initializeevent")
-  self._registertileevent = net_event(inst.GUID, "mxp.mermfarmblueprint._registertileevent")
-  self._unregistertileevent = net_event(inst.GUID, "mxp.mermfarmblueprint._unregistertileevent")
-  self._eventdata = net_string(inst.GUID, "mxp.mermfarmblueprint._eventdata")
-
-  if not TheNet:IsDedicated() then
-    self.initialized = false
-
-    inst:ListenForEvent("mxp.mermfarmblueprint._initializeevent", function()
-      if self.initialized then return end
-      print("event.initializetile:", CalledFrom())
-      local data = self._eventdata:value()
-      if data == "" then return end
-
-      for tag, tile in pairs(JSON.decode(data)) do
-        if tile.x and tile.y and tile.z and tile.slots then
-          self._registeredtiles[tag] = tile
-        end
-      end
-
-      self.initialized = true
-    end)
-
-    inst:ListenForEvent("mxp.mermfarmblueprint._registertileevent", function()
-      print("event.registertile:", CalledFrom())
-      local data = JSON.decode(self._eventdata:value())
-      self._registeredtiles[data.tag] = data.tile
-      if self._onchangefn then self._onchangefn() end
-    end)
-
-    inst:ListenForEvent("mxp.mermfarmblueprint._unregistertileevent", function()
-      print("event.unregistertile:", CalledFrom())
-      local tag = self._eventdata:value()
-      self._registeredtiles[tag] = nil
-      if self._onchangefn then self._onchangefn() end
-    end)
+  if TheWorld.ismastersim then
+    self.classified = inst.mermexp_mermfarmblueprint_classified
+  elseif self.classified == nil and inst.mermexp_mermfarmblueprint_classified ~= nil then
+    self:AttachClassified(inst.mermexp_mermfarmblueprint_classified)
   end
 end)
+
+--------------------------------------------------------------------------
+
+function FarmBlueprint:OnRemoveFromEntity()
+  if self.classified ~= nil then
+    if TheWorld.ismastersim then
+      self.classified = nil
+    else
+      self.inst:RemoveEventCallback("onremove", self.ondetachclassified, self.classified)
+      self:DetachClassified()
+    end
+  end
+end
+
+FarmBlueprint.OnRemoveEntity = FarmBlueprint.OnRemoveFromEntity
+
+function FarmBlueprint:AttachClassified(classified)
+  self.classified = classified
+  self.ondetachclassified = function() self:DetachClassified() end
+  self.inst:ListenForEvent("onremove", self.ondetachclassified, classified)
+end
+
+function FarmBlueprint:DetachClassified()
+  self.classified = nil
+  self.ondetachclassified = nil
+end
+
+--------------------------------------------------------------------------
 
 local function component(self)
   return self.inst.components.mermexp_mermfarmblueprint
 end
 
-local function _SendRPCToServer(self, command, ...)
-  Util.SendComponentRPCToServer(self.inst, "mermexp_mermfarmblueprint", command, ...)
-end
-
---------------------------------------------------------------------------
---Common interface
---------------------------------------------------------------------------
-
----@class Plant
----@field name string
----@field prefab string
----@field build string
----@field bank string
----@field anim string
----@field index number
-
----@class FarmTileSlot
----@field x number
----@field y number
----@field z number
----@field assigned_plant Plant?
-
----@class FarmTile
----@field x number
----@field y number
----@field z number
----@field slots FarmTileSlot[]
-
----comment
----@param tag string
----@param tile FarmTile
-function FarmBlueprint:RegisterFarmTile(tag, tile)
-  if component(self) then
-    -- print(debug.getinfo(2).name)
-    print("replica.RegisterFarmTile:", CalledFrom())
-    self._eventdata:set(JSON.encode({ tag = tag, tile = tile }))
-    self._registertileevent:push()
-  else
-    _SendRPCToServer(self, "RegisterFarmTile", tile.x, tile.y, tile.z)
-  end
-end
-
----comment
----@param tag string
-function FarmBlueprint:UnregisterFarmTile(tag)
-  if component(self) then
-    self._eventdata:set(tag)
-    self._unregistertileevent:push()
-  else
-    _SendRPCToServer(self, "UnregisterFarmTile", tag)
-  end
-end
-
----comment
----@param tile_tag string
----@param slot_index number
----@return Plant?
-function FarmBlueprint:GetAssignedPlant(tile_tag, slot_index)
-  if component(self) then
-    return component(self):GetAssignedPlant(tile_tag, slot_index)
-  else
-    if self._registeredtiles[tile_tag] == nil then return nil end
-
-    local slot_array = self._registeredtiles[tile_tag].slots
-    if not slot_array or not slot_array[slot_index] then return nil end
-
-    return slot_array[slot_index].assigned_plant
-  end
-end
-
----comment
----@param tile_tag string
----@param slot_index number
----@param plant string
----@return nil
-function FarmBlueprint:SetAssignedPlant(tile_tag, slot_index, plant)
-  if component(self) then
-    return component(self):SetAssignedPlant(tile_tag, slot_index, plant)
-  else
-    if self._registeredtiles[tile_tag] == nil then return end
-
-    local slot_array = self._registeredtiles[tile_tag].slots
-    if not slot_array or not slot_array[slot_index] then return end
-
-    slot_array[slot_index].assigned_plant = plant and CONSTANTS.PLANTABLES:At(plant) or nil
-
-    if self._onchangefn ~= nil then self._onchangefn() end
-
-    _SendRPCToServer(self, "SetAssignedPlant", tile_tag, slot_index, plant)
-  end
-end
-
----comment
----@return { [string]: FarmTile }
-function FarmBlueprint:GetRegisteredFarmTiles()
-  if component(self) then
-    return component(self):GetRegisteredFarmTiles()
-  else
-    return self._registeredtiles
-  end
-end
-
---------------------------------------------------------------------------
---Server interface
---------------------------------------------------------------------------
-
----comment
----@param tiles { [string]: FarmTile }
-function FarmBlueprint:SetRegisteredTiles(tiles)
-  if component(self) then
-    self._eventdata:set(JSON.encode(tiles))
-    self._initializeevent:push()
-  end
-end
-
---------------------------------------------------------------------------
---Client interface
---------------------------------------------------------------------------
-
----comment
----@param fn? function
-function FarmBlueprint:SetOnChangeFn(fn)
-  if component(self) then
-    component(self):SetOnChangeFn(fn)
-  else
-    self._onchangefn = fn
-  end
-end
-
----comment
+---Checks if slot has its assigned plant planted
 ---@param slot FarmTileSlot
 ---@return boolean
 function FarmBlueprint.SlotIsPlanted(slot)
@@ -194,7 +55,7 @@ function FarmBlueprint.SlotIsPlanted(slot)
   return false
 end
 
----comment
+---Checks if slot is tilled
 ---@param slot FarmTileSlot
 ---@return boolean
 function FarmBlueprint.SlotIsTilled(slot)
@@ -202,7 +63,77 @@ function FarmBlueprint.SlotIsTilled(slot)
   return #ents > 0
 end
 
----comment
+---Registers a farm tile to the blueprint
+---@param x number
+---@param y number
+---@param z number
+---@param capturelayout boolean
+---@return boolean
+function FarmBlueprint:RegisterFarmTile(x, y, z, capturelayout)
+  if component(self) then
+    return component(self):RegisterFarmTile(x, y, z, capturelayout)
+  else
+    return self.classified ~= nil and self.classified:RegisterFarmTile(Vector3(x, y, z), capturelayout) or false
+  end
+end
+
+---Unregisters a farm tile from the blueprint
+---@param x_or_tag number | string
+---@param y number
+---@param z number
+---@return boolean
+function FarmBlueprint:UnregisterFarmTile(x_or_tag, y, z)
+  if component(self) then
+    return component(self):UnregisterFarmTile(x_or_tag, y, z)
+  else
+    return self.classified ~= nil and self.classified:UnregisterFarmTile(x_or_tag, y, z) or false
+  end
+end
+
+---Removes assigned plants in all the tiles's slots
+function FarmBlueprint:ClearFarmTiles()
+  if component(self) then
+    component(self):ClearFarmTiles()
+  elseif self.classified ~= nil then
+    self.classified:ClearFarmTiles()
+  end
+end
+
+---Gets all registered farm tiles
+---@return { [string]: FarmTile }
+function FarmBlueprint:GetRegisteredFarmTiles()
+  if component(self) then
+    return component(self):GetRegisteredFarmTiles()
+  else
+    return self.classified ~= nil and self.classified:GetRegisteredFarmTiles() or {}
+  end
+end
+
+---Gets the tile's slot's assigned plant
+---@param tile_tag string
+---@param slot_index number
+---@return Plant?
+function FarmBlueprint:GetAssignedPlant(tile_tag, slot_index)
+  if component(self) then
+    return component(self):GetAssignedPlant(tile_tag, slot_index)
+  else
+    return self.classified ~= nil and self.classified:GetAssignedPlant(tile_tag, slot_index) or nil
+  end
+end
+
+---Sets the tile's slot's assigned plant
+---@param tile_tag string
+---@param slot_index number
+---@param plant string
+function FarmBlueprint:SetAssignedPlant(tile_tag, slot_index, plant)
+  if component(self) then
+    component(self):SetAssignedPlant(tile_tag, slot_index, plant)
+  elseif self.classified ~= nil then
+    self.classified:SetAssignedPlant(tile_tag, slot_index, plant)
+  end
+end
+
+---Gets the registered tile by its world coordinates
 ---@param x number
 ---@param y number
 ---@param z number
@@ -211,46 +142,30 @@ function FarmBlueprint:GetRegisteredFarmTileAtPoint(x, y, z)
   if component(self) then
     return component(self):GetRegisteredFarmTileAtPoint(x, y, z)
   else
-    return self._registeredtiles[Util.TileTag(x, y, z)]
+    return self.classified ~= nil and self.classified:GetRegisteredFarmTileAtPoint(x, y, z) or nil
   end
 end
 
----comment
----@param x number
+---Checks if tile is registered
+---@param x_or_tag number | string
 ---@param y number
 ---@param z number
 ---@return boolean
-function FarmBlueprint:IsRegisteredFarmTile(x, y, z)
+function FarmBlueprint:IsRegisteredFarmTile(x_or_tag, y, z)
   if component(self) then
-    return component(self):IsRegisteredFarmTile(x, y, z)
+    return component(self):IsRegisteredFarmTile(x_or_tag, y, z)
   else
-    if type(x) == "string" then return self._registeredtiles[x] ~= nil end
-    return self._registeredtiles[Util.TileTag(x, y, z)] ~= nil
+    return self.classified ~= nil and self.classified:IsRegisteredFarmTile(x_or_tag, y, z) or false
   end
 end
 
----comment
+---Gets all unregistered tiles connected to the blueprint's registered tiles
 ---@return { [string]: FarmTile }
 function FarmBlueprint:GetUnregisteredConnectedTiles()
   if component(self) then
     return component(self):GetUnregisteredConnectedTiles()
   else
-    local tiles = {}
-
-    local function InsertTile(tx, ty, tz)
-      local tcx, tcy, tcz = TheWorld.Map:GetTileCenterPoint(tx, ty, tz)
-      tiles[Util.TileTag(tx, ty, tz)] = { x = tcx, y = tcy, z = tcz }
-    end
-    local function IsInserted(tx, ty, tz) return tiles[Util.TileTag(tx, ty, tz)] ~= nil end
-    local function IsFarmingSoil(tx, ty, tz) return TheWorld.Map:GetTileAtPoint(tx, ty, tz) == WORLD_TILES.FARMING_SOIL end
-
-    for tile_tag, tile in pairs(self._registeredtiles) do
-      if tiles[tile_tag] == nil then
-        Util.FloodTileSearch(tile.x, tile.y, tile.z, InsertTile, IsInserted, IsFarmingSoil)
-      end
-    end
-
-    return tiles
+    return self.classified ~= nil and self.classified:GetUnregisteredConnectedTiles() or {}
   end
 end
 

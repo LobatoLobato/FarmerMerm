@@ -58,10 +58,18 @@ end
 local function _SendRPCToServer(id, ...)
   SendModRPCToServer(GetModRPC(CONSTANTS.MOD_NAME, id), ...)
 end
+local function _SendRPCToClient(id, ...)
+  SendModRPCToClient(GetModRPC(CONSTANTS.MOD_NAME, id), ...)
+end
 local function SendComponentRPCToServer(inst, component_name, command, ...)
   _SendRPCToServer("componentrpc", inst, component_name, command, ...)
 end
-
+local function SendReplicaRPCToClient(inst, replica_name, command, ...)
+  _SendRPCToClient("replicarpc", inst, replica_name, command, ...)
+end
+local function SendClassifiedRPCToClient(inst, replica_name, command, ...)
+  _SendRPCToClient("classifiedrpc", inst, replica_name, command, ...)
+end
 
 local function Dump(o)
   if type(o) == 'table' then
@@ -76,14 +84,15 @@ local function Dump(o)
   end
 end
 
+local VEC3TAGPATTERN = "%d_%d_%d"
 local function Vec3Tag(vec_or_x, y, z)
   if type(vec_or_x) == "table" then
     local vec = vec_or_x
-    return tostring(vec.x) .. "_" .. tostring(vec.y) .. "_" .. tostring(vec.z)
+    return VEC3TAGPATTERN:format(vec.x, vec.y, vec.z)
   end
 
   local x = vec_or_x
-  return tostring(x) .. "_" .. tostring(y) .. "_" .. tostring(z)
+  return VEC3TAGPATTERN:format(x, y, z)
 end
 
 local function TileTag(vec_or_x, y, z)
@@ -97,12 +106,16 @@ local function TileTag(vec_or_x, y, z)
   local tcx, tcy, tcz = TheWorld.Map:GetTileCenterPoint(x, y, z)
   return Vec3Tag(tcx, tcy, tcz)
 end
+
 return {
   RegisterContainerParam = RegisterContainerParam,
   FloodTileSearch = FloodTileSearch,
   Dump = Dump,
   SendRPCToServer = _SendRPCToServer,
+  SendRPCToClient = _SendRPCToClient,
   SendComponentRPCToServer = SendComponentRPCToServer,
+  SendReplicaRPCToClient = SendReplicaRPCToClient,
+  SendClassifiedRPCToClient = SendClassifiedRPCToClient,
   Vec3Tag = Vec3Tag,
   TileTag = TileTag
 }

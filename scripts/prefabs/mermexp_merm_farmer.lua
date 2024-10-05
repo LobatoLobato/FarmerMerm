@@ -38,7 +38,6 @@ local merm_loot = {
 }
 
 local sounds = {
-  attack = "dontstarve/creatures/merm/attack",
   hit = "dontstarve/creatures/merm/hurt",
   death = "dontstarve/creatures/merm/death",
   talk = "dontstarve/characters/wurt/merm/warrior/talk",
@@ -46,20 +45,23 @@ local sounds = {
 }
 
 local merm_farmer_brain = require "brains.mermexp.merm_farmerbrain"
-local SLIGHTDELAY = 1
 
 local function farmer_common(inst)
   inst.sounds = sounds
   inst.AnimState:SetBuild("merm_build")
 
   inst:AddTag("merm_farmer")
+
+  if not TUNING.MERMEXP_MERMFARMER_UNLOADS then
+    inst.entity:SetCanSleep(false)
+  end
 end
+
 local function on_mermking_destroyed_anywhere(inst)
-  inst:DoTaskInTime(math.random() * SLIGHTDELAY, function() inst.components.health:Kill() end)
+  inst:DoTaskInTime(math.random(), function() inst.components.health:Kill() end)
 end
 
 local function farmer_master(inst)
-  inst:SetStateGraph("mermexp/SGmerm_farmer")
   inst:SetBrain(merm_farmer_brain)
 
   inst.components.lootdropper:SetLoot(merm_loot)
@@ -88,15 +90,27 @@ local function farmer_master(inst)
   end
 
   function inst:EquipWateringCan()
-    return self:Equip("wateringcan", EQUIPSLOTS.HANDS, { try_equip_from_home = true })
+    if self:GetWateringCan() then
+      self:UnequipHands()
+      return self:Equip("wateringcan", EQUIPSLOTS.HANDS, { try_equip_from_home = true })
+    end
   end
 
   function inst:EquipTool()
-    return self:Equip("merm_tool", EQUIPSLOTS.HANDS)
+    if self:GetTool() then
+      self:UnequipHands()
+      return self:Equip("merm_tool", EQUIPSLOTS.HANDS)
+    end
   end
 
   function inst:UnequipHands()
     self:Unequip(EQUIPSLOTS.HANDS, { store_at_home_list = { "wateringcan" } })
+  end
+
+  function inst:ShowInventory()
+    for _, v in pairs(self.components.inventory.itemslots) do
+      print(v)
+    end
   end
 end
 

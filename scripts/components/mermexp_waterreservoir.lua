@@ -34,7 +34,7 @@ function WaterReservoir:MaxLevel()
   return self.maxlevel
 end
 
-function WaterReservoir:AddWater(doer, wateringcan)
+function WaterReservoir:AddWater(_, wateringcan)
   local wateringcan_remaining_uses = wateringcan.components.finiteuses:GetUses()
   local wateringcan_water_per_use = wateringcan.components.wateryprotection.addwetness
   local wateringcan_waterlevel = wateringcan_remaining_uses * wateringcan_water_per_use
@@ -48,14 +48,10 @@ function WaterReservoir:AddWater(doer, wateringcan)
   local uses = math.min(remaining_space / wateringcan_water_per_use, wateringcan_remaining_uses)
   wateringcan.components.finiteuses:Use(uses)
 
-  if doer.waterlevelmeter then
-    doer.waterlevelmeter:SetValue(self.level, self.maxlevel, RATE_SCALE.INCREASE_MED)
-  end
-
   return true
 end
 
-function WaterReservoir:FillCan(doer, wateringcan)
+function WaterReservoir:FillCan(_, wateringcan)
   local wateringcan_total_uses = wateringcan.components.finiteuses.total
   local wateringcan_remaining_uses = wateringcan.components.finiteuses:GetUses()
   local wateringcan_water_per_use = wateringcan.components.wateryprotection.addwetness
@@ -69,10 +65,6 @@ function WaterReservoir:FillCan(doer, wateringcan)
 
   wateringcan.components.finiteuses:SetUses(wateringcan_remaining_uses + uses_to_fill)
   self.level = self.level - uses_to_fill * wateringcan_water_per_use
-
-  if doer.waterlevelmeter then
-    doer.waterlevelmeter:SetValue(self.level, self.maxlevel, RATE_SCALE.DECREASE_MED)
-  end
 
   return true
 end

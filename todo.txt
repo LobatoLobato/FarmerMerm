@@ -1,0 +1,98 @@
+🟡 Unlock mermciv upgrades through a station by completing "quests"
+  -- Tech tree like
+  -- Only wurts can use the station
+  -- Can only do one quest at a time, changing quests resets the previously selected quest
+  -- Can be things like giving certain items to the station, or accomplishing certain tasks, killing certain enemies etc
+  -- On quest completed that point in the tech tree gets unlocked for the player, 
+     so even if the station is destroyed the player will still have the tech unlocked,
+     even showing up on another station.
+  -- Tech unlocks are individual, so if a wurt unlocks something other wurts wont unlock it,
+     🟡 maybe add a way to share progress with other wurts.
+        -- "Learn" action in the station?
+        -- Let the station be shared?
+        -- Link the player to a station and every player linked to that station will share progress 
+            -- being able to complete different quests simultaneously?
+            -- being able to help other wurts's quests?
+  -- Quests are picture books drawn by wurt  
+    -- Needs specific chalk colors to be drawn
+    -- books are available to be read after they are built
+    
+  *- Farmer Quest
+     -- actions
+        -- use a gardeneer hat
+        -- grow all kinds of crops, at least one weed and at least one oversized crop
+        -- maybe starts tracking when she plants a seed idk the implementation
+{
+  modinfo: 🟡 Add proper description,
+  modmain: 🟡 Add debug/testing functions,
+  init[🟡]: {
+    brains: {
+      friendlyfruitflybrain: ✅,
+    },
+    prefabs: {
+      skilltree_wurt: ✅,
+    },
+    stategraphs: {
+      SGmerm: ✅,
+    },
+    widgets: {
+      containerwidget: ✅,
+    },
+    actions: ✅,
+    config: ✅,
+    popups: ✅,
+    recipes: ✅,
+    RPCs: ✅,
+    strings: 🟡 Write proper descriptions, etc.
+  },
+  scripts[🟡]: {
+    brains[✅]: {
+      mermexp: {
+        merm_farmerbrain: ✅,
+      },
+    },
+    components[✅]: {
+      mermexp_mermfarmblueprint: ✅,
+      mermexp_mermfarmblueprint_replica: ✅,
+      mermexp_waterreservoir: ✅,
+      mermexp_waterreservoir_replica: ✅,
+    },
+    mermexp[✅]: {
+      containerwidgets: {
+        merm_farmer: ✅,
+        mermhouse_farmer: ✅,
+      },
+      util: {
+        json: ✅,
+        makemerm: ✅,
+        makemermhouse: ✅,
+      },
+      constants: ✅,
+      plantlookuptable: ✅,
+      util: ✅,
+    },
+    prefabs[🟡]: {
+      mermexp_merm_farmer: 🟡 Make custom anims,
+      mermexp_mermfarm_blueprint: 🟡 Make custom sprite and anim,
+      mermexp_mermfarmblueprint_classified: ✅,
+      mermexp_mermhouse_farmer: 🟡 Fix anim
+    }
+    screens[✅]: {
+      mermexp: {
+        farmblueprintscreen: ✅,
+      },
+    },
+    widgets[✅]: {
+      mermexp: {
+        waterlevelmeter: ✅,
+        farmblueprint: {
+          canvas: ✅,
+          controls: ✅,
+          seed: ✅,
+          slot: ✅,
+          tile: ✅,
+        },
+      },
+    },
+  }
+}
