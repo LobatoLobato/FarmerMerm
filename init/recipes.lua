@@ -37,15 +37,13 @@ MakeRecipe("mermhouse_farmer", {
   description = "CLT",
   ingredients = { { "boards", 5 }, { "pondfish", 2 }, { "plantregistryhat", 1 } },
   techlevel = GLOBAL.TECH.SCIENCE_ONE,
-  builder_skill = "wurt_mermexp_civ_1",
   placer = true,
   marsh_only = true,
 })
 
 MakeRecipe("mermfarm_blueprint", {
   name = "Mermfarm Blueprint",
-  description = "Guide your merm farmers",
+  description = "ashassuuahsdu",
   ingredients = { { "papyrus", 2 }, { "twigs", 4 }, { "featherpencil", 1 } },
   techlevel = GLOBAL.TECH.SCIENCE_ONE,
-  builder_skill = "wurt_mermexp_civ_1",
 })

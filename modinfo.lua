@@ -1,5 +1,5 @@
-name = "Mermexp"
-description = "Idk"
+name = "FarmerMerm"
+description = "IdkF"
 author = "Lobato"
 version = "0.0.1"
 forumthread = ""

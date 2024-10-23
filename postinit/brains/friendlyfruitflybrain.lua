@@ -2,7 +2,7 @@ local CONSTANTS = require "mermexp.constants"
 
 local function ValidPlant(inst, plant)
   local fruit = inst.components.follower.leader
-  local container = fruit.components.inventoryitem:GetContainer()
+  local container = fruit and fruit.components.inventoryitem:GetContainer() or nil
 
   if container == nil or not container.inst:HasTag("mermhouse_farmer") or container:GetFarmBlueprint() == nil then
     return true
