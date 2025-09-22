@@ -627,7 +627,7 @@ function MermBrain:OnStart()
     }
 
     local ClearIterators = DoAction(self.inst, function() IteratorNodes:Clear() end, "ClearIterators")
-    local IfNoBlueprint = IfNode(function() return NeedsBlueprint(self.inst) end, "IfNoBlueprint", PriorityNode {
+    local WhileNoBlueprint = WhileNode(function() return NeedsBlueprint(self.inst) end, "WhileNoBlueprint", PriorityNode {
         ClearIterators,
         Wander(self.inst, GetNoLeaderHomePos, MAX_WANDER_DIST)
     })
@@ -635,7 +635,7 @@ function MermBrain:OnStart()
     local root = PriorityNode({
         BrainCommon.PanicTrigger(self.inst),
         FleeFromCombat,
-        IfNoBlueprint,
+        WhileNoBlueprint,
         PickupToolFromGround,
         CollectToolFromShed,
         IteratorNodes.HammerOversized,
