@@ -205,7 +205,6 @@ local Fillers = {
             local targets = TheSim:FindEntities(tile.x, tile.y, tile.z, FARM_TILE_RADIUS, { "oversized_veggie" })
             for _, target in ipairs(targets) do
                 iterator:Push(target)
-                -- table.insert(iterator, target)
             end
         end
 
@@ -232,7 +231,6 @@ local Fillers = {
 
                 if target_slot == nil or is_debris or is_wrong_plant or is_rotten_plant then
                     iterator:Push(target)
-                    -- table.insert(iterator, target)
                 end
             end
         end
@@ -250,7 +248,6 @@ local Fillers = {
 
                 if #localsoils < 1 and TheWorld.Map:CanTillSoilAtPoint(pos:Get()) then
                     iterator:Push(pos)
-                    -- table.insert(iterator, pos)
                 end
             end
         end
@@ -273,7 +270,6 @@ local Fillers = {
 
                 if #localsoils > 0 and #localplants < 1 and home_has_seeds then
                     iterator:Push({ localsoils[1], slot.assigned_plant })
-                    -- table.insert(iterator, { localsoils[1], slot.assigned_plant })
                 end
             end
         end
@@ -291,7 +287,6 @@ local Fillers = {
 
                 if #localplants > 0 and localplants[1].components.inspectable:GetStatus():find("FULL") then
                     iterator:Push(localplants[1])
-                    -- table.insert(iterator, localplants[1])
                 end
             end
         end
@@ -308,7 +303,6 @@ local Fillers = {
 
             if target.nutrients[1] <= 92 or target.nutrients[2] <= 92 or target.nutrients[3] <= 92 then
                 iterator:Push(target)
-                -- table.insert(iterator, target)
             end
         end
 
@@ -322,7 +316,6 @@ local Fillers = {
         for _, tile in orderedPairs(tiles) do
             if GetSoilMoisture(tile.x, tile.y, tile.z) <= 75 then 
                 iterator:Push(tile)
-                -- table.insert(iterator, tile) 
             end
         end
 
@@ -339,7 +332,6 @@ local Fillers = {
 
                     if #localplants > 0 and localplants[1].components.farmplanttendable.tendable then
                         iterator:Push(localplants[1])
-                        -- table.insert(iterator, localplants[1])
                     end
                 end
             end
@@ -360,7 +352,6 @@ local Fillers = {
             for _, target in ipairs(targets) do
                 if not target:IsInLimbo() and container:GetSpecificSlotForItem(target) then
                     iterator:Push(target)
-                    -- table.insert(iterator, target)
                 end
             end
             container.currentuser = nil
@@ -408,16 +399,16 @@ local Actions = {
         end
     end,
     Hammer = function(inst, iterator)
-        local target = iterator:Pop() -- table.remove(iterator, 1)
+        local target = iterator:Pop()
         return BufferedAction(inst, target, ACTIONS.HAMMER)
     end,
     Dig = function(inst, iterator)
-        local target = iterator:Pop() -- table.remove(iterator, 1)
+        local target = iterator:Pop() 
         inst:EquipTool()
         return BufferedAction(inst, target, ACTIONS.DIG)
     end,
     Till = function(inst, iterator)
-        local pos = iterator:Pop() -- table.remove(iterator, 1)
+        local pos = iterator:Pop() 
         if pos then
             local tool = inst:EquipTool()
 
@@ -427,7 +418,7 @@ local Actions = {
         end
     end,
     Plant = function(inst, iterator)
-        local target, assigned_plant = unpack(iterator:Pop()) -- table.remove(iterator, 1))
+        local target, assigned_plant = unpack(iterator:Pop()) 
         local seed = inst:FetchSeeds(assigned_plant.name, true)
         if seed == nil then seed = inst:FetchSeeds("seeds", true) end
 
@@ -437,7 +428,7 @@ local Actions = {
         end
     end,
     Harvest = function(inst, iterator)
-        local target = iterator:Pop() -- table.remove(iterator, 1)
+        local target = iterator:Pop() 
 
         if target.components.inspectable:GetStatus():find("FULL") then
             inst:EquipTool()
@@ -445,7 +436,7 @@ local Actions = {
         end
     end,
     Fertilize = function(inst, iterator)
-        local target = iterator:Pop() -- table.remove(iterator, 1)
+        local target = iterator:Pop() 
         local pos = Vector3(target.x, target.y, target.z)
         local fertilizer = ChooseFertilizer(inst:GetHome():GetFertilizers(), target.nutrients)
 
@@ -463,7 +454,7 @@ local Actions = {
         end
     end,
     WaterTile = function(inst, iterator)
-        local target = iterator:Pop() -- table.remove(iterator, 1)
+        local target = iterator:Pop() 
         local watering_can = inst:EquipWateringCan()
 
         if watering_can ~= nil then
@@ -473,13 +464,13 @@ local Actions = {
         end
     end,
     Tend = function(inst, iterator)
-        local target = iterator:Pop() -- table.remove(iterator, 1)
+        local target = iterator:Pop() 
 
         inst:UnequipHands()
         return BufferedAction(inst, target, ACTIONS.INTERACT_WITH)
     end,
     Collect = function(inst, iterator)
-        local target = iterator:Pop() -- table.remove(iterator, 1)
+        local target = iterator:Pop() 
         inst:UnequipHands()
         return BufferedAction(inst, target, ACTIONS.MERMFARMER_PICKUP)
     end,

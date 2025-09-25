@@ -101,7 +101,8 @@ end
 
 local function StartSpawning(inst)
   if inst.needskingtospawn and not HasKingAnywhere() then return end
-  if not TheWorld.state.iswinter and inst.components.childspawner ~= nil and not inst:HasTag("burnt") then
+  -- if not TheWorld.state.iswinter and inst.components.childspawner ~= nil and not inst:HasTag("burnt") then
+  if inst.components.childspawner ~= nil and not inst:HasTag("burnt") then
     inst.components.childspawner:StartSpawning()
   end
 end
