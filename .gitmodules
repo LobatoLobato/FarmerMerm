@@ -1,0 +1,3 @@
+[submodule "external/ref_scripts"]
+	path = external/ref_scripts
+	url = https://github.com/LobatoLobato/dst_documented_scripts.git
